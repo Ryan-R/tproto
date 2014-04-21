@@ -1,9 +1,14 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
-
-    <item
-        android:id="@+id/menu_settings"
+	<item
+        android:id="@+id/friendlist"
         android:orderInCategory="100"
         android:showAsAction="never"
-        android:title="@string/menu_settings"/>
+        android:title="Friend List"/>
+    
+    <item
+        android:id="@+id/notifications"
+        android:orderInCategory="100"
+        android:showAsAction="never"
+        android:title="Notifications"/>
 
 </menu>

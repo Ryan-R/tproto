@@ -1,53 +1,75 @@
-//TODO FriendsList, FriendsView in Friendslist, Connect to Map API, Create fake friends with fake location, friend request
+//TODO Heart Beat to Server
 package com.example.trackerprototype;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.StringTokenizer;
 
-import com.google.android.maps.MapActivity;
-import com.google.android.maps.MapView;
-
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.util.DisplayMetrics;
+import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
+import android.widget.TableLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
-public class TrackerPrototype extends MapActivity {
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+
+
+public class TrackerPrototype extends FragmentActivity{
 	
 	private SharedPreferences options;  //holds option information
 	//Better way of doing this
 	//http://stackoverflow.com/questions/1925486/android-storing-username-and-password
 	private SharedPreferences account;  //holds login information
+	private String userScreenName = "";
 	private SharedPreferences friends;  //holds friend information
-	//private BearingFrameLayout bearingFrameLayout; // rotates the MapView
-	private MapView mapView;
+	private boolean menuCheck = true; //if menu is allowed
+	private GoogleMap map;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 		
-		MapView mapView = (MapView) findViewById(R.id.mapview);
-	    mapView.setBuiltInZoomControls(true);
+		if((map = ((SupportMapFragment) getSupportFragmentManager().
+				findFragmentById(R.id.mapview)).getMap()) == null)
+		{
+			
+			//TODO handle lack of map
+		}
+		else{
+			map.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+			map.getUiSettings().setZoomControlsEnabled(false);
+			map.getUiSettings().setMyLocationButtonEnabled(true);
+			map.setMyLocationEnabled(true);
+			map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(38.762789,-93.736050), 14));
+		}
+		
 		
 		options = getSharedPreferences("options", MODE_PRIVATE);
+		account = getSharedPreferences("account", MODE_PRIVATE);
 		
 		//if it not the users first time
 		if(!options.getBoolean("firstTime", true)){
@@ -55,10 +77,10 @@ public class TrackerPrototype extends MapActivity {
 			if(options.getBoolean("autoSignin", false)){
 				//Better way of doing this
 				//http://stackoverflow.com/questions/1925486/android-storing-username-and-password
-				account = getSharedPreferences("account", MODE_PRIVATE);
 				String screenName = account.getString("screenName", "");
 				String password = account.getString("password", "");
-				signIn();
+				SignIn connection = new SignIn();
+        		connection.execute(screenName, password);
 			}
 			//if the user chooses to not use the autoSignin feature
 			else{
@@ -72,44 +94,80 @@ public class TrackerPrototype extends MapActivity {
 		
 	}
 
+	//Screen for user to register an account
+	//TODO textwatchers and regex
+	//TODO add already registered button button
 	private void registerScreen() {
 		FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
 	    View.inflate(this, R.layout.register_screen_view, mainLayout);
 	    Button button = (Button) findViewById(R.id.submit);
 	    button.setOnClickListener(new OnClickListener() {
         	@Override
-            public void onClick(View v) {       		
-            	register();
+            public void onClick(View v) {     
+        		v.setEnabled(false);
+        		String screenName = ((EditText)findViewById(R.id.screenName)).getText().toString();
+        		String password = ((EditText)findViewById(R.id.password)).getText().toString();
+        		String passwordConfirm = ((EditText)findViewById(R.id.passwordConfirm)).getText().toString();
+        		String birthYear = ((EditText)findViewById(R.id.birthYear)).getText().toString();
+        		String firstName = ((EditText)findViewById(R.id.firstName)).getText().toString();
+        		String lastName = ((EditText)findViewById(R.id.lastName)).getText().toString();
+        		Log.d("l", screenName + password + passwordConfirm + birthYear + firstName + lastName);
+        		
+        		//check screenName
+        		if(screenName.length() == 0 || screenName.length() > 25){
+        			Toast.makeText(getApplicationContext(), "Bad Screen Name", Toast.LENGTH_SHORT).show();
+        			v.setEnabled(true);
+        			return;
+        		}
+        		
+        		//check password
+        		if(password.length() == 0 || password.length() > 30 || !password.equals(passwordConfirm)){
+        			Toast.makeText(getApplicationContext(), "Bad Password", Toast.LENGTH_SHORT).show();
+        			v.setEnabled(true);
+        			return;
+        		}
+        		
+        		//check birthyear
+        		if (birthYear.length() < 4 || Integer.parseInt(birthYear) > 2014 || Integer.parseInt(birthYear) < 1900){
+        			Toast.makeText(getApplicationContext(), "Bad Birth Year", Toast.LENGTH_SHORT).show();
+        			v.setEnabled(true);
+        			return;
+        		}
+        		
+        		//check firstname
+        		if(firstName.length() == 0 || firstName.length() > 20){
+        			Toast.makeText(getApplicationContext(), "Bad First Name", Toast.LENGTH_SHORT).show();
+        			v.setEnabled(true);
+        			return;
+        		}
+        		
+        		//check lastname
+        		if(lastName.length() == 0 || lastName.length() > 20){
+        			Toast.makeText(getApplicationContext(), "Bad Last Name", Toast.LENGTH_SHORT).show();
+        			v.setEnabled(true);
+        			return;
+        		}
+        		
+        		Register connection = new Register();
+        		connection.execute(screenName, password, birthYear.toString(), firstName, lastName);       		
+        		
             }
-        });	   
-	}
+        });	
+	    
+	    Button login = (Button) findViewById(R.id.login);
+	    login.setOnClickListener(new OnClickListener() {
+        	@Override
+            public void onClick(View v) {     
+        		ScrollView registerScreenView = (ScrollView) findViewById(R.id.registerScreen);
+            	FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
+            	mainLayout.removeView(registerScreenView);
+            	signInScreen();
+        	}
+	    });
+	}	
 	
-	private void register() {
-		String screenName = ((EditText)findViewById(R.id.screenName)).getText().toString();
-		String password = ((EditText)findViewById(R.id.password)).getText().toString();
-		String passwordConfirm = ((EditText)findViewById(R.id.passwordConfirm)).getText().toString();
-		String birthYear = ((EditText)findViewById(R.id.birthYear)).getText().toString();
-		String firstName = ((EditText)findViewById(R.id.firstName)).getText().toString();
-		String lastName = ((EditText)findViewById(R.id.lastName)).getText().toString();
-		Log.d("l", screenName + password + passwordConfirm + birthYear + firstName + lastName);
-		
-		//TODO HERE is where we do checks
-		//TODO Communicate with server and checks
-		//TODO recieve info from server
-		//TODO react to server reply
-		
-		SharedPreferences.Editor optionsEditor = options.edit();
-		optionsEditor.putBoolean("firstTime", false);
-		optionsEditor.commit();
-		
-		ScrollView registerScreenView = (ScrollView) findViewById(R.id.registerScreen);
-    	FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
-    	mainLayout.removeView(registerScreenView);
-    	
-    	tutorialScreen();
-	}
-	
-	//if we just want to give instructions this can be changed to a dialog
+	//Screen to explain how to use the application
+	//TODO actual tutorial or help screen
 	private void tutorialScreen(){
 		FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
 	    View.inflate(this, R.layout.tutorial_screen_view, mainLayout);
@@ -125,17 +183,26 @@ public class TrackerPrototype extends MapActivity {
         });
 	}
 	
-	//this could just be a dialog as well
+	//Screen after tutorial to add friends when user's first join
 	private void addFriendScreen(){
 		FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
 	    View.inflate(this, R.layout.add_friend_screen_view, mainLayout);
 	    Button request = (Button) findViewById(R.id.request);
 	    request.setOnClickListener(new OnClickListener() {
         	@Override
-            public void onClick(View v) {       		
-            	sendRequest();
+            public void onClick(View v) {   
+        		v.setEnabled(false);
+        		String requestee = ((EditText) findViewById(R.id.newFriend)).getText().toString();
+        		if (requestee.length() == 0 || requestee.length() > 25){
+        			Toast.makeText(getApplicationContext(), "Bad Screen Name", Toast.LENGTH_SHORT).show();
+        			v.setEnabled(true);
+        			return;
+        		}
+        		RequestFriend connection = new RequestFriend();
+        		connection.execute(userScreenName, requestee);
             }
         });
+	    
 	    Button done = (Button) findViewById(R.id.done);
 	    done.setOnClickListener(new OnClickListener() {
         	@Override
@@ -146,69 +213,369 @@ public class TrackerPrototype extends MapActivity {
             }
         });
 	}
-	
-	private void sendRequest(){
-		EditText screenName = (EditText) findViewById(R.id.screenName);
-		TestClient test = new TestClient();
-		test.execute(screenName.getText().toString());
-		//screenName.setText("");
-		
-		//Toast.makeText(getApplicationContext(), "Request Sent", Toast.LENGTH_SHORT).show();		
-	}
 
+	//TODO add loading circle or bar
 	private void signInScreen() {
 		FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
 	    View.inflate(this, R.layout.sign_in_screen_view, mainLayout);
 	    Button button = (Button) findViewById(R.id.submit);
 	    button.setOnClickListener(new OnClickListener() {
         	@Override
-            public void onClick(View v) {       		
-            	signIn();
+            public void onClick(View v) {  
+        		v.setEnabled(false);
+        		String screenName = ((EditText)findViewById(R.id.screenName)).getText().toString();
+        		String password = ((EditText)findViewById(R.id.password)).getText().toString();
+        		
+        		//check screenName
+        		if(screenName.length() == 0 || screenName.length() > 25){
+        			Toast.makeText(getApplicationContext(), "Bad Screen Name", Toast.LENGTH_SHORT).show();
+        			v.setEnabled(true);
+        			return;
+        		}
+        		
+        		//check password
+        		if(password.length() == 0 || password.length() > 30){
+        			Toast.makeText(getApplicationContext(), "Bad Password", Toast.LENGTH_SHORT).show();
+        			v.setEnabled(true);
+        			return;
+        		}       		
+            	
+        		SignIn connection = new SignIn();
+        		connection.execute(screenName, password);
             }
-        });		
+        });	
+	    
+	    Button register = (Button) findViewById(R.id.register);
+	    register.setOnClickListener(new OnClickListener() {
+        	@Override
+            public void onClick(View v) {     
+        		ScrollView signInScreenView = (ScrollView) findViewById(R.id.signInScreen);
+            	FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
+            	mainLayout.removeView(signInScreenView);
+            	registerScreen();
+        	}
+	    });
 	}
-
-	private void signIn() {
-		String screenName = ((EditText)findViewById(R.id.screenName)).getText().toString();
-		String password = ((EditText)findViewById(R.id.password)).getText().toString();
-		Log.d("l", screenName + password);
-		// TODO Connect to server and validate screenName and password
-		
-		if(((CheckBox)findViewById(R.id.checkBox1)).isChecked()){
-			SharedPreferences.Editor optionsEditor = options.edit();
-			optionsEditor.putBoolean("firstTime", true);
-			optionsEditor.commit();
-		}
-		
-		ScrollView registerScreenView = (ScrollView) findViewById(R.id.signInScreen);
-    	FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
-    	mainLayout.removeView(registerScreenView);
-    	
-    	//TODO Check friends requests, if there are show them
-    	//TODO if not dirent to main app
-		
+	
+	//TODO put actual notifications inside
+	private void notificationScreen(){
+		menuCheck = false;
+		FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
+	    View.inflate(this, R.layout.notification_screen_view, mainLayout);
+	    
+	    Button exit = (Button) findViewById(R.id.exit);
+	    exit.setOnClickListener(new OnClickListener() {
+        	@Override
+            public void onClick(View v) { 
+        		ScrollView notificationScreenView = (ScrollView) findViewById(R.id.notificationScreen);
+        		FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
+        		mainLayout.removeView(notificationScreenView);
+        		menuCheck = true;
+            }
+        });
+	    exit.setEnabled(false);
+	    GetNotifications connection = new GetNotifications();
+	    connection.execute(userScreenName);
 	}
-
+	
+	private void inflateNotifications(String notifications){
+		int i = 0;
+		boolean lflag = false, fflag = false;
+		final Context context = this;
+		TableLayout locationTableLayout = (TableLayout) findViewById(R.id.locationRequestTable);
+		TableLayout friendTableLayout = (TableLayout) findViewById(R.id.friendRequestTable);
+		TextView screenNameView;
+		View notificationView;
+		StringTokenizer st = new StringTokenizer(notifications, "/");
+		String screenName = "";
+		//location requests
+		st.nextToken();
+	    while (st.hasMoreTokens()) {
+	        screenName = st.nextToken();
+	        if(screenName.equals("friend")) break;
+	        final int newId = Integer.MAX_VALUE - i++; //creates new id so screenName id can be referenced
+	        notificationView = View.inflate(this, R.layout.notification, locationTableLayout);
+	        screenNameView = (TextView)notificationView.findViewById(R.id.screenName);
+		    screenNameView.setText(screenName);
+		    screenNameView.setId(newId);
+		    
+		    Button respond = (Button) notificationView.findViewById(R.id.respond);
+		    respond.setId(Integer.MAX_VALUE - i++);
+		    respond.setOnClickListener(new OnClickListener() {
+		    	@Override
+		    	public void onClick(View v) { 
+		    		final String  name = ((TextView)((View) v.getParent()).findViewById(newId)).getText().toString();
+		    		new AlertDialog.Builder(context)
+		    	    .setTitle("Location Request")
+		    	    .setMessage("Do you wish to accept " + name+"'s request?")
+		    	    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+		    	        public void onClick(DialogInterface dialog, int which) { 
+		    	        	LocationRequestResponse connection = new LocationRequestResponse();
+		    	            connection.execute(name ,userScreenName, "true");//TODO
+		    	        }
+		    	     })
+		    	    .setNegativeButton("Deny", new DialogInterface.OnClickListener() {
+		    	        public void onClick(DialogInterface dialog, int which) { 
+		    	        	LocationRequestResponse connection = new LocationRequestResponse();
+		    	            connection.execute(name ,userScreenName, "false");//TODO
+		    	        }
+		    	     })
+		    	    .setIcon(android.R.drawable.ic_dialog_alert)
+		    	    .show();
+		    	}
+		    });
+		    lflag = true;
+	    }
+	    //friend requests
+	    while (st.hasMoreTokens()) {
+	    	screenName = st.nextToken();
+	    	final int newId = Integer.MAX_VALUE - i++; //creates new id so screenName id can be referenced
+	        notificationView = View.inflate(this, R.layout.notification, friendTableLayout);
+		    screenNameView = (TextView)notificationView.findViewById(R.id.screenName);
+		    screenNameView.setText(screenName);
+		    screenNameView.setId(newId);
+		    
+		    Button respond = (Button) notificationView.findViewById(R.id.respond);
+		    respond.setId(Integer.MAX_VALUE - i++);
+		    respond.setOnClickListener(new OnClickListener() {
+		    	@Override
+		    	public void onClick(View v) { 
+		    		final String name = ((TextView)((View) v.getParent()).findViewById(newId)).getText().toString();
+		    		new AlertDialog.Builder(context)
+		    	    .setTitle("Friend Request")
+		    	    .setMessage("Do you wish to accept " + name+"'s request?")
+		    	    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+		    	        public void onClick(DialogInterface dialog, int which) { 
+		    	        	FriendRequestResponse connection = new FriendRequestResponse();
+		    	            connection.execute(name ,userScreenName, "true");
+		    	        }
+		    	     })
+		    	    .setNegativeButton("Deny", new DialogInterface.OnClickListener() {
+		    	        public void onClick(DialogInterface dialog, int which) { 
+		    	        	FriendRequestResponse connection = new FriendRequestResponse();
+		    	            connection.execute(name ,userScreenName, "false");
+		    	        }
+		    	     })
+		    	    .setIcon(android.R.drawable.ic_dialog_alert)
+		    	    .show();
+		    	}
+		    });
+		    fflag = true;
+	    }
+	    
+	    if(lflag) locationTableLayout.findViewById(R.id.locationRequests).setVisibility(View.GONE);
+	    
+	    if(fflag) friendTableLayout.findViewById(R.id.friendRequests).setVisibility(View.GONE);
+	    
+	    Button exit = (Button) findViewById(R.id.exit);
+	    exit.setEnabled(true);
+	}
+		
+	private void friendListScreen(){
+		menuCheck = false;
+		FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
+		View.inflate(this, R.layout.friends_screen_view, mainLayout);
+		
+		 Button request = (Button) findViewById(R.id.request);
+		 request.setOnClickListener(new OnClickListener() {
+	       	@Override
+	        public void onClick(View v) {   
+	       		v.setEnabled(false);
+	       		String requestee = ((EditText) findViewById(R.id.newFriend)).getText().toString();
+	       		if (requestee.length() == 0 || requestee.length() > 25){
+	       			Toast.makeText(getApplicationContext(), "Bad Screen Name", Toast.LENGTH_SHORT).show();
+	       			v.setEnabled(true);
+	       			return;
+	      		}
+	       		RequestFriend connection = new RequestFriend();
+	      		connection.execute(userScreenName, requestee);
+	        }
+	    });
+		
+		Button exit = (Button) findViewById(R.id.exit);
+		exit.setOnClickListener(new OnClickListener() {
+	      	@Override
+	        public void onClick(View v) { 
+	      		RelativeLayout friendsScreenView = (RelativeLayout) findViewById(R.id.friendsScreen);
+	       		FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
+	       		mainLayout.removeView(friendsScreenView);
+	       		menuCheck = true;
+	        }
+	    });
+		exit.setEnabled(false);
+		GetFriends connection = new GetFriends();
+		connection.execute(userScreenName);
+	}
+	
+	private void inflateFriendList(String friends){
+		int i = 0;
+		boolean fflag = false;
+		final Context context = this;
+		TableLayout friendListTableLayout = (TableLayout) findViewById(R.id.friendListTable);
+		TextView screenNameView;
+		View notificationView;
+		StringTokenizer st = new StringTokenizer(friends, "/");
+		String screenName = "";
+		//friends
+		while (st.hasMoreTokens()) {
+		    screenName = st.nextToken();
+		    
+		    final int newId = Integer.MAX_VALUE - i++; //creates new id so screenName id can be referenced
+		    notificationView = View.inflate(this, R.layout.friend, friendListTableLayout);
+		    screenNameView = (TextView)notificationView.findViewById(R.id.screenName);
+		    screenNameView.setText(screenName);
+		    screenNameView.setId(newId);
+			    
+		    Button options = (Button) notificationView.findViewById(R.id.options);
+		    options.setId(Integer.MAX_VALUE - i++);
+		    options.setOnClickListener(new OnClickListener() {
+		    	@Override
+		    	public void onClick(View v) { 
+		    		final String  name = ((TextView)((View) v.getParent()).findViewById(newId)).getText().toString();
+		    		CharSequence[] options = {"Locate", "Delete"};
+		    		new AlertDialog.Builder(context)
+		    	    .setTitle("Friend Options")
+		    	    .setItems(options, new DialogInterface.OnClickListener() {
+		    	    	public void onClick(DialogInterface dialog, int which) {
+		    	    		Connection connection;
+		    	    		switch(which){
+		    	    		case 0:
+		    	    			connection = new LocationRequest();
+		    	    			connection.execute(userScreenName, name);
+		    	    			break;
+		    	    		case 1:
+		    	    			connection = new DeleteFriend();
+		    	    			connection.execute(userScreenName, name);
+		    	    			break;
+		    	    		}
+		    	    	}
+		    	    })		    	    
+		    	    .setIcon(android.R.drawable.ic_dialog_alert)
+		    	    .show();
+		    	}
+		    });
+		    fflag = true;
+		}		 
+		   
+		if(fflag) friendListTableLayout.findViewById(R.id.noFriends).setVisibility(View.GONE);
+	    
+		Button exit = (Button) findViewById(R.id.exit);
+		exit.setEnabled(true);
+	}
+	
+	//TODO create actual menu
+	//friends list, options, help screen, notifications
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
+		//TODO Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.activity_main, menu);
 		return true;
 	}
 	
-	class TestClient extends AsyncTask<String, Void, Void>{
-		private Socket socket;
-		private DataOutputStream toServer;
-		private DataInputStream fromServer;
-		private String socketName = "75.134.43.74";
-		private int port = 8081;
-		private String response;
+	//Dynamically create context Menu
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        menu.clear(); //Clear view of previous menu
+        MenuInflater inflater = getMenuInflater();
+        if(!userScreenName.equals("") &&  menuCheck)
+            inflater.inflate(R.menu.activity_main, menu);
+        return super.onPrepareOptionsMenu(menu);
+    }
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+	    // Handle item selection
+	    switch (item.getItemId()) {
+	    	case R.id.friendlist:
+	    		friendListScreen();
+	    		return true;
+	        case R.id.notifications:
+	            notificationScreen();
+	            return true;
+	        default:
+	            return super.onOptionsItemSelected(item);
+	    }
+	}
+	
+	
+	/*CONNECTIONS TO THE SERVER*/	
+	/*Connect to server to handle registration*/
+	class Register extends Connection{
+		String screenName;
+		String password;
+		int birthYear;
+		String firstName;
+		String lastName;
+		@Override
+		protected Void doInBackground(String... params) {
+			screenName = params[0];
+			password = params[1];
+			birthYear = Integer.parseInt(params[2]);
+			firstName = params[3];
+			lastName = params[4];
+					
+			try {
+				// Tell what address and port to send information to
+				socket = new Socket(socketName, port);
+				fromServer = new DataInputStream(
+						socket.getInputStream());
+
+				toServer = new DataOutputStream(
+						socket.getOutputStream());
+				toServer.writeInt(1);
+				toServer.writeUTF(screenName);
+				toServer.writeUTF(password);
+				toServer.writeInt(birthYear);
+				toServer.writeUTF(firstName);
+				toServer.writeUTF(lastName);
+				
+				errorDecider = fromServer.readInt();
+				
+				socket.close();
+			}
+			catch(IOException ex) {
+				System.err.println(ex);
+			}
+			return null;
+		}
+		
+		@Override
+		protected void onPostExecute(Void Result){			
+			
+			switch (errorDecider){
+				case -1: 
+					Toast.makeText(getApplicationContext(), "Screen Name already used", Toast.LENGTH_SHORT).show();
+					Button button = (Button) findViewById(R.id.submit);
+					button.setEnabled(true);
+					return;
+				default:
+					break;
+			}
+			userScreenName = screenName;
+			SharedPreferences.Editor optionsEditor = options.edit();
+    		optionsEditor.putBoolean("firstTime", false);
+    		optionsEditor.commit();
+    		
+    		ScrollView registerScreenView = (ScrollView) findViewById(R.id.registerScreen);
+        	FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
+        	mainLayout.removeView(registerScreenView);
+        	
+        	tutorialScreen();
+		}
+	}
+	
+	/*Connect to server to handle attempt to signin*/
+	class SignIn extends Connection{
+		String screenName;
+		String password;
 		
 		@Override
 		protected Void doInBackground(String... params) {
+			screenName = params[0];
+			password = params[1];
 			try {
 				// Tell what address and port to send information to
-				Socket socket = new Socket(socketName, port);
+				socket = new Socket(socketName, port);
 
 				fromServer = new DataInputStream(
 						socket.getInputStream());
@@ -216,11 +583,12 @@ public class TrackerPrototype extends MapActivity {
 				toServer = new DataOutputStream(
 						socket.getOutputStream());
 				
-				toServer.writeUTF(params[0]);
-				while(true){
-					if((response = fromServer.readUTF()) != null)
-						break;				
-				}
+				toServer.writeInt(2);
+				toServer.writeUTF(screenName);
+				toServer.writeUTF(password);
+				
+				errorDecider = fromServer.readInt();
+				
 				socket.close();
 			}
 			catch(IOException ex) {
@@ -231,15 +599,454 @@ public class TrackerPrototype extends MapActivity {
 		
 		@Override
 		protected void onPostExecute(Void Result){
-			EditText screenName = (EditText) findViewById(R.id.screenName);
-			screenName.setText("");		
-			Toast.makeText(getApplicationContext(), response, Toast.LENGTH_SHORT).show();	
+			switch (errorDecider){
+				case -1: 
+					//TODO (should not effect auto signin
+					if(!options.getBoolean("autoSignin", false)){
+						Toast.makeText(getApplicationContext(), "Incorrect screen name or password", Toast.LENGTH_SHORT).show();
+						Button button = (Button) findViewById(R.id.submit);
+						button.setEnabled(true);
+					}
+					else{
+						Toast.makeText(getApplicationContext(), "Error in signing in", Toast.LENGTH_SHORT).show();
+						signInScreen();
+					}
+					return;
+				default:
+					break;
+			}
+			
+			userScreenName = screenName;			
+			if(!options.getBoolean("autoSignin", false)){
+				if(((CheckBox)findViewById(R.id.checkBox1)).isChecked()){
+					SharedPreferences.Editor optionsEditor = options.edit();
+					optionsEditor.putBoolean("autoSignin", true);
+					optionsEditor.commit();
+					SharedPreferences.Editor accountEditor = account.edit();
+					accountEditor.putString("screenName", screenName);
+					accountEditor.putString("password", password);    
+					accountEditor.commit();
+    			}
+				
+				ScrollView signInScreenView = (ScrollView) findViewById(R.id.signInScreen);
+	        	FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
+	        	mainLayout.removeView(signInScreenView);
+			}
+			
+			//TODO get new requests
 		}
 	}
 
-	@Override
-	protected boolean isRouteDisplayed() {
-		// TODO Auto-generated method stub
-		return false;
+	/*Connects to server to handle Friend Requests*/
+	class RequestFriend extends Connection{
+		String requester;
+		String requestee;
+		
+		@Override
+		protected Void doInBackground(String... params) {
+			requester = params[0];
+			requestee = params[1];
+			try {
+				// Tell what address and port to send information to
+				socket = new Socket(socketName, port);
+
+				fromServer = new DataInputStream(
+						socket.getInputStream());
+
+				toServer = new DataOutputStream(
+						socket.getOutputStream());
+				
+				toServer.writeInt(3);
+				toServer.writeUTF(requester);
+				toServer.writeUTF(requestee);
+				
+				errorDecider = fromServer.readInt();
+				
+				socket.close();
+			}
+			catch(IOException ex) {
+				System.err.println(ex);
+			}
+			return null;
+		}
+		
+		@Override
+		protected void onPostExecute(Void Result){
+			EditText screenName = (EditText) findViewById(R.id.newFriend);
+			screenName.setText("");		
+			Button request = (Button) findViewById(R.id.request);
+			request.setEnabled(true);
+			//TODO Respond based off of error decider
+			Toast.makeText(getApplicationContext(), "Friend Request Sent", Toast.LENGTH_SHORT).show();	
+		}
 	}
+	
+	/*Connects to server to handle Location Requests*/
+	class RequestLocation extends Connection{
+		String requester;
+		String requestee;
+		
+		@Override
+		protected Void doInBackground(String... params) {
+			requester = params[0];
+			requestee = params[1];
+			try {
+				// Tell what address and port to send information to
+				socket = new Socket(socketName, port);
+
+				fromServer = new DataInputStream(
+						socket.getInputStream());
+
+				toServer = new DataOutputStream(
+						socket.getOutputStream());
+				
+				toServer.writeInt(4);
+				toServer.writeUTF(requester);
+				toServer.writeUTF(requestee);
+				
+				errorDecider = fromServer.readInt();
+				
+				socket.close();
+			}
+			catch(IOException ex) {
+				System.err.println(ex);
+			}
+			return null;
+		}
+		
+		@Override
+		protected void onPostExecute(Void Result){	
+			//TODO Respond based off of error decider
+			//Toast.makeText(getApplicationContext(), response, Toast.LENGTH_SHORT).show();	
+		}
+	}
+	
+	/*Connects to server to handle Location Requests*/
+	class LocationRequest extends Connection{
+		String requester;
+		String requestee;
+		
+		@Override
+		protected Void doInBackground(String... params) {
+			requester = params[0];
+			requestee = params[1];
+			try {
+				// Tell what address and port to send information to
+				socket = new Socket(socketName, port);
+
+				fromServer = new DataInputStream(
+						socket.getInputStream());
+
+				toServer = new DataOutputStream(
+						socket.getOutputStream());
+				
+				toServer.writeInt(4);
+				toServer.writeUTF(requester);
+				toServer.writeUTF(requestee);
+				
+				errorDecider = fromServer.readInt();
+				
+				socket.close();
+			}
+			catch(IOException ex) {
+				System.err.println(ex);
+			}
+			return null;
+		}
+		
+		@Override
+		protected void onPostExecute(Void Result){
+			
+			//TODO Respond based off of error decider
+			//Toast.makeText(getApplicationContext(), response, Toast.LENGTH_SHORT).show();	
+		}
+	}
+	
+	/*Connects to server to handle Friend Deletion*/
+	class DeleteFriend extends Connection{
+		String requester;
+		String requestee;
+		
+		@Override
+		protected Void doInBackground(String... params) {
+			requester = params[0];
+			requestee = params[1];
+			try {
+				// Tell what address and port to send information to
+				socket = new Socket(socketName, port);
+
+				fromServer = new DataInputStream(
+						socket.getInputStream());
+
+				toServer = new DataOutputStream(
+						socket.getOutputStream());
+				
+				toServer.writeInt(5);
+				toServer.writeUTF(requester);
+				toServer.writeUTF(requestee);
+				
+				errorDecider = fromServer.readInt();
+				
+				socket.close();
+			}
+			catch(IOException ex) {
+				System.err.println(ex);
+			}
+			return null;
+		}
+		
+		@Override
+		protected void onPostExecute(Void Result){	
+			//TODO Respond based off of error decider
+			//Toast.makeText(getApplicationContext(), response, Toast.LENGTH_SHORT).show();	
+			switch (errorDecider){
+			case -1: 				
+				Toast.makeText(getApplicationContext(), "Error deleting", Toast.LENGTH_SHORT).show();
+			    return;
+			default:
+				break;
+			}
+			Toast.makeText(getApplicationContext(), "Friend Deleted", Toast.LENGTH_SHORT).show();
+			RelativeLayout friendsScreenView = (RelativeLayout) findViewById(R.id.friendsScreen);
+       		FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
+    		mainLayout.removeView(friendsScreenView);
+    		friendListScreen();
+		}
+	}
+		
+	/*Connects to server to handle Response of friend request*/
+	class LocationRequestResponse extends Connection{
+		String requester;
+		String requestee;
+		boolean response;
+		
+		@Override
+		protected Void doInBackground(String... params) {
+			requester = params[0];
+			requestee = params[1];
+			response = Boolean.valueOf(params[2]);
+			try {
+				// Tell what address and port to send information to
+				socket = new Socket(socketName, port);
+
+				fromServer = new DataInputStream(
+						socket.getInputStream());
+
+				toServer = new DataOutputStream(
+						socket.getOutputStream());
+				
+				toServer.writeInt(6);
+				toServer.writeUTF(requester);
+				toServer.writeUTF(requestee);
+				toServer.writeBoolean(response);
+				
+				errorDecider = fromServer.readInt();
+				
+				socket.close();
+			}
+			catch(IOException ex) {
+				System.err.println(ex);
+			}
+			return null;
+		}
+		
+		@Override
+		protected void onPostExecute(Void Result){	
+			//TODO Respond based off of error decider
+			//Toast.makeText(getApplicationContext(), response, Toast.LENGTH_SHORT).show();	
+		}
+	}
+	
+	/*Connects to server to handle response of friend request*/
+	class FriendRequestResponse extends Connection{
+		String requester;
+		String requestee;
+		boolean response;
+		
+		@Override
+		protected Void doInBackground(String... params) {
+			requester = params[0];
+			requestee = params[1];
+			response = Boolean.valueOf(params[2]);
+			try {
+				// Tell what address and port to send information to
+				socket = new Socket(socketName, port);
+
+				fromServer = new DataInputStream(
+						socket.getInputStream());
+
+				toServer = new DataOutputStream(
+						socket.getOutputStream());
+				
+				toServer.writeInt(7);
+				toServer.writeUTF(requester);
+				toServer.writeUTF(requestee);
+				toServer.writeBoolean(response);
+				
+				errorDecider = fromServer.readInt();
+				
+				socket.close();
+			}
+			catch(IOException ex) {
+				System.err.println(ex);
+			}
+			return null;
+		}
+		
+		@Override
+		protected void onPostExecute(Void Result){	
+			//TODO Respond based off of error decider
+			switch (errorDecider){
+			case -1: 				
+				Toast.makeText(getApplicationContext(), "Error sending response", Toast.LENGTH_SHORT).show();
+			    return;
+			default:
+				break;
+			}
+			Toast.makeText(getApplicationContext(), "Response Sent", Toast.LENGTH_SHORT).show();
+			ScrollView notificationScreenView = (ScrollView) findViewById(R.id.notificationScreen);
+    		FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
+    		mainLayout.removeView(notificationScreenView);
+    		notificationScreen();
+		}
+	}
+	
+	/*Connects to server to handle getting the user's friends*/
+	class GetFriends extends Connection{
+		String screenName;
+		String friends;
+		
+		@Override
+		protected Void doInBackground(String... params) {
+			screenName = params[0];
+			try {
+				// Tell what address and port to send information to
+				socket = new Socket(socketName, port);
+
+				fromServer = new DataInputStream(
+						socket.getInputStream());
+
+				toServer = new DataOutputStream(
+						socket.getOutputStream());
+				
+				toServer.writeInt(8);
+				toServer.writeUTF(screenName);
+				
+				errorDecider = fromServer.readInt();
+				friends = fromServer.readUTF();
+				
+				socket.close();
+			}
+			catch(IOException ex) {
+				System.err.println(ex);
+			}
+			return null;
+		}
+		
+		@Override
+		protected void onPostExecute(Void Result){
+			//TODO Respond based off of error decider
+			switch (errorDecider){
+			case -1: 				
+				Toast.makeText(getApplicationContext(), "Error receiving friend's list", Toast.LENGTH_SHORT).show();
+			    return;
+			default:
+				break;
+			}
+			inflateFriendList(friends);
+		}
+	}
+	
+	/*Connects to server to handle getting the user's notifications*/
+	class GetNotifications extends Connection{
+		String screenName;
+		String notifications;
+		
+		@Override
+		protected Void doInBackground(String... params) {
+			screenName = params[0];
+			try {
+				// Tell what address and port to send information to
+				socket = new Socket(socketName, port);
+
+				fromServer = new DataInputStream(
+						socket.getInputStream());
+
+				toServer = new DataOutputStream(
+						socket.getOutputStream());
+				
+				toServer.writeInt(9);
+				toServer.writeUTF(screenName);
+				
+				errorDecider = fromServer.readInt();
+				notifications = fromServer.readUTF();
+				
+				socket.close();
+			}
+			catch(IOException ex) {
+				System.err.println(ex);
+			}
+			return null;
+		}
+		
+		@Override
+		protected void onPostExecute(Void Result){	
+			
+			//TODO Respond based off of error decider
+			switch (errorDecider){
+			case -1: 				
+				Toast.makeText(getApplicationContext(), "Error receiving notifications", Toast.LENGTH_SHORT).show();
+			    return;
+			default:
+				break;
+			}
+			inflateNotifications(notifications);
+				
+		}
+	}
+	
+	/*Connects to server to handle getting the user's requested location*/
+	class GetLocations extends Connection{
+		String requester;
+		String requestee;
+		double lastKnownLat;
+		double lastKnownLong;
+		
+		@Override
+		protected Void doInBackground(String... params) {
+			requester = params[0];
+			try {
+				// Tell what address and port to send information to
+				socket = new Socket(socketName, port);
+
+				fromServer = new DataInputStream(
+						socket.getInputStream());
+
+				toServer = new DataOutputStream(
+						socket.getOutputStream());
+				
+				toServer.writeInt(10);
+				toServer.writeUTF(requester);
+				
+				errorDecider = fromServer.readInt();
+				requestee = fromServer.readUTF();
+				lastKnownLat = fromServer.readDouble();
+				lastKnownLong = fromServer.readDouble();
+				
+				socket.close();
+			}
+			catch(IOException ex) {
+				System.err.println(ex);
+			}
+			return null;
+		}
+		
+		@Override
+		protected void onPostExecute(Void Result){	
+			//TODO Respond based off of error decider
+			//TODO generate route/direction to recieved location of requestee
+			//Toast.makeText(getApplicationContext(), response, Toast.LENGTH_SHORT).show();	
+		}
+	}
+	
 }
