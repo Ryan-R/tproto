@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/notificationScreen"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#DD000000"
+    android:scrollbars="vertical" >
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
+
+	<TextView
+	    android:id="@+id/textView1"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:layout_alignParentTop="true"
+	    android:layout_centerHorizontal="true"
+	    android:layout_marginTop="25dp"
+	    android:alpha="1"
+	    android:text="Notifications"
+	    android:textColor="#FFFFFF"
+	    android:textSize="30sp" />
+
+	<TableLayout
+	    android:id="@+id/locationRequestTable"
+	    android:layout_width="match_parent"
+	    android:layout_height="match_parent"
+	    android:layout_below="@+id/textView1">
+
+	    <TableRow android:gravity="center"
+	        	  android:layout_width="match_parent" >
+
+	        <TextView
+	            android:id="@+id/textView2"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:layout_marginTop="15dp"
+	            android:alpha="1"
+	            android:text="Location Requests"
+	            android:textColor="#FFFFFF"
+	            android:textSize="25sp" />
+ 
+	    </TableRow>	    
+	    <TableRow android:gravity="center"
+	              android:layout_width="match_parent" >
+
+	        <TextView
+	            android:id="@+id/locationRequests"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:layout_gravity="center"
+	            android:layout_marginTop="5dp"
+	            android:alpha="1"
+	            android:text="No new location requests"
+	            android:textColor="#FFFFFF"
+	            android:textSize="15sp" />
+ 
+	    </TableRow>
+	    
+	</TableLayout>    
+	<TableLayout
+	    android:id="@+id/friendRequestTable"
+	    android:layout_width="match_parent"
+	    android:layout_height="match_parent"
+	    android:layout_below="@+id/locationRequestTable">
+
+	    <TableRow android:gravity="center"
+	        	  android:layout_width="match_parent" >
+
+	        <TextView
+	            android:id="@+id/textView3"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:layout_marginTop="15dp"
+	            android:alpha="1"
+	            android:text="Friend Requests"
+	            android:textColor="#FFFFFF"
+	            android:textSize="25sp" />
+ 
+	    </TableRow>	    
+	    <TableRow android:gravity="center"
+	              android:layout_width="match_parent" >
+
+	        <TextView
+	            android:id="@+id/friendRequests"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:layout_gravity="center"
+	            android:layout_marginTop="5dp"
+	            android:alpha="1"
+	            android:text="No new friend requests"
+	            android:textColor="#FFFFFF"
+	            android:textSize="15sp" /> 	            
+	    </TableRow>	  
+	</TableLayout>
+
+	<Button
+	    android:id="@+id/exit"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:layout_alignParentRight="true"
+	    android:layout_alignParentTop="true"
+	    android:text="x" />
+
+</RelativeLayout>
+</ScrollView>

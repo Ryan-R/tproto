@@ -11,6 +11,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.location.LocationManager;
@@ -33,6 +34,8 @@ import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesClient;
 import com.google.android.gms.location.LocationClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -40,8 +43,12 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 
 
-public class TrackerPrototype extends FragmentActivity{
+public class TrackerPrototype extends FragmentActivity
+    implements GooglePlayServicesClient.ConnectionCallbacks,
+        GooglePlayServicesClient.OnConnectionFailedListener
+{
 	
+	private static final int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
 	private SharedPreferences options;  //holds option information
 	//Better way of doing this
 	//http://stackoverflow.com/questions/1925486/android-storing-username-and-password
@@ -70,7 +77,7 @@ public class TrackerPrototype extends FragmentActivity{
 			map.getUiSettings().setMyLocationButtonEnabled(true);
 			map.setMyLocationEnabled(true);
 			map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(38.762789,-93.736050), 14));
-			//change to go to users location
+			//TODO change to go to users location
 		}
 		
 		
@@ -97,9 +104,23 @@ public class TrackerPrototype extends FragmentActivity{
 		else{
 			registerScreen();			
 		}
-		locationClient = new LocationClient(this, null, null); //last to params
+		locationClient = new LocationClient(this, this, this); //last to params
 		
 	}
+	
+	@Override
+    protected void onStart() {
+        super.onStart();
+        // Connect the client.
+        locationClient.connect();
+    }
+	
+	@Override
+    protected void onStop() {
+        // Disconnecting the client invalidates it.
+        locationClient.disconnect();
+        super.onStop();
+    }
 
 	//Screen for user to register an account
 	//TODO textwatchers and regex
@@ -318,7 +339,6 @@ public class TrackerPrototype extends FragmentActivity{
 		    	    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 		    	        public void onClick(DialogInterface dialog, int which) { 
 		    	        	userLocation = locationClient.getLastLocation();
-		    	        	LocationManager lM; //TODO use location manager instead
 		    	        	String latString = "" + userLocation.getLatitude();
 		    	        	String longString = "" + userLocation.getLongitude();
 		    	        	LocationRequestResponse connection = new LocationRequestResponse();
@@ -771,7 +791,7 @@ public class TrackerPrototype extends FragmentActivity{
 		protected void onPostExecute(Void Result){
 			
 			//TODO Respond based off of error decider
-			//Toast.makeText(getApplicationContext(), response, Toast.LENGTH_SHORT).show();	
+			Toast.makeText(getApplicationContext(), "Location Request Sent", Toast.LENGTH_SHORT).show();
 		}
 	}
 	
@@ -872,7 +892,18 @@ public class TrackerPrototype extends FragmentActivity{
 		@Override
 		protected void onPostExecute(Void Result){	
 			//TODO Respond based off of error decider
-			//Toast.makeText(getApplicationContext(), response, Toast.LENGTH_SHORT).show();	
+			switch (errorDecider){
+			case -1: 				
+				Toast.makeText(getApplicationContext(), "Error sending response", Toast.LENGTH_SHORT).show();
+			    return;
+			default:
+				break;
+			}
+			Toast.makeText(getApplicationContext(), "Response Sent", Toast.LENGTH_SHORT).show();
+			ScrollView notificationScreenView = (ScrollView) findViewById(R.id.notificationScreen);
+    		FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
+    		mainLayout.removeView(notificationScreenView);
+    		notificationScreen();			
 		}
 	}
 	
@@ -1066,6 +1097,53 @@ public class TrackerPrototype extends FragmentActivity{
 			//TODO generate route/direction to recieved location of requestee
 			//Toast.makeText(getApplicationContext(), response, Toast.LENGTH_SHORT).show();	
 		}
+	}
+
+	@Override
+	public void onConnectionFailed(ConnectionResult result) {
+		 /*
+         * Google Play services can resolve some errors it detects.
+         * If the error has a resolution, try sending an Intent to
+         * start a Google Play services activity that can resolve
+         * error.
+         */
+        if (result.hasResolution()) {
+            try {
+                // Start an Activity that tries to resolve the error
+                result.startResolutionForResult(
+                        this,
+                        CONNECTION_FAILURE_RESOLUTION_REQUEST);
+                /*
+                 * Thrown if Google Play services canceled the original
+                 * PendingIntent
+                 */
+            } catch (IntentSender.SendIntentException e) {
+                // Log the error
+                e.printStackTrace();
+            }
+        } else {
+            /*
+             * If no resolution is available, display a dialog to the
+             * user with the error.
+             */
+            showDialog(result.getErrorCode());
+        }
+		
+	}
+
+	@Override
+	public void onConnected(Bundle connectionHint) {
+		// Display the connection status
+        Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show();
+		
+	}
+
+	@Override
+	public void onDisconnected() {
+		// Display the connection status
+        Toast.makeText(this, "Disconnected. Please re-connect.",
+                Toast.LENGTH_SHORT).show();
+		
 	}
 	
 }

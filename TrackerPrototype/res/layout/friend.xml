@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableRow xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+	android:layout_height="wrap_content"
+	android:gravity="center_horizontal" >
+    
+    <TextView
+        android:id="@+id/screenName"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:alpha="1"
+        android:text="1234567890123456789012345"
+        android:textColor="#FFFFFF"
+        android:textSize="15sp" />
+    
+    <Button
+        android:id="@+id/options"
+        android:layout_width="90dp"
+        android:text="options" />
+
+</TableRow>
