@@ -12,6 +12,8 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
@@ -31,6 +33,7 @@ import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.location.LocationClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -47,6 +50,8 @@ public class TrackerPrototype extends FragmentActivity{
 	private SharedPreferences friends;  //holds friend information
 	private boolean menuCheck = true; //if menu is allowed
 	private GoogleMap map;
+	private LocationClient locationClient;
+	private Location userLocation;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +70,7 @@ public class TrackerPrototype extends FragmentActivity{
 			map.getUiSettings().setMyLocationButtonEnabled(true);
 			map.setMyLocationEnabled(true);
 			map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(38.762789,-93.736050), 14));
+			//change to go to users location
 		}
 		
 		
@@ -91,6 +97,7 @@ public class TrackerPrototype extends FragmentActivity{
 		else{
 			registerScreen();			
 		}
+		locationClient = new LocationClient(this, null, null); //last to params
 		
 	}
 
@@ -310,14 +317,19 @@ public class TrackerPrototype extends FragmentActivity{
 		    	    .setMessage("Do you wish to accept " + name+"'s request?")
 		    	    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 		    	        public void onClick(DialogInterface dialog, int which) { 
+		    	        	userLocation = locationClient.getLastLocation();
+		    	        	LocationManager lM; //TODO use location manager instead
+		    	        	String latString = "" + userLocation.getLatitude();
+		    	        	String longString = "" + userLocation.getLongitude();
 		    	        	LocationRequestResponse connection = new LocationRequestResponse();
-		    	            connection.execute(name ,userScreenName, "true");//TODO
+		    	            connection.execute(name ,userScreenName, 
+		    	            		latString, longString, "true");
 		    	        }
 		    	     })
 		    	    .setNegativeButton("Deny", new DialogInterface.OnClickListener() {
 		    	        public void onClick(DialogInterface dialog, int which) { 
 		    	        	LocationRequestResponse connection = new LocationRequestResponse();
-		    	            connection.execute(name ,userScreenName, "false");//TODO
+		    	            connection.execute(name ,userScreenName, "0", "0","false");
 		    	        }
 		    	     })
 		    	    .setIcon(android.R.drawable.ic_dialog_alert)
@@ -618,15 +630,16 @@ public class TrackerPrototype extends FragmentActivity{
 			
 			userScreenName = screenName;			
 			if(!options.getBoolean("autoSignin", false)){
-				if(((CheckBox)findViewById(R.id.checkBox1)).isChecked()){
-					SharedPreferences.Editor optionsEditor = options.edit();
-					optionsEditor.putBoolean("autoSignin", true);
-					optionsEditor.commit();
+				SharedPreferences.Editor optionsEditor = options.edit();
+				if(((CheckBox)findViewById(R.id.checkBox1)).isChecked()){					
+					optionsEditor.putBoolean("autoSignin", true);					
 					SharedPreferences.Editor accountEditor = account.edit();
 					accountEditor.putString("screenName", screenName);
 					accountEditor.putString("password", password);    
-					accountEditor.commit();
+					accountEditor.commit();					
     			}
+				optionsEditor.putBoolean("firstTime", false);
+	    		optionsEditor.commit();
 				
 				ScrollView signInScreenView = (ScrollView) findViewById(R.id.signInScreen);
 	        	FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
@@ -819,12 +832,16 @@ public class TrackerPrototype extends FragmentActivity{
 		String requester;
 		String requestee;
 		boolean response;
+		double lastKnownLat;
+		double lastKnownLong;
 		
 		@Override
 		protected Void doInBackground(String... params) {
 			requester = params[0];
-			requestee = params[1];
-			response = Boolean.valueOf(params[2]);
+			requestee = params[1];			
+			lastKnownLat = Double.parseDouble(params[2]);
+			lastKnownLong  = Double.parseDouble(params[3]);
+			response = Boolean.valueOf(params[4]);
 			try {
 				// Tell what address and port to send information to
 				socket = new Socket(socketName, port);
@@ -837,7 +854,9 @@ public class TrackerPrototype extends FragmentActivity{
 				
 				toServer.writeInt(6);
 				toServer.writeUTF(requester);
-				toServer.writeUTF(requestee);
+				toServer.writeUTF(requestee);				
+				toServer.writeDouble(lastKnownLat);
+				toServer.writeDouble(lastKnownLong);
 				toServer.writeBoolean(response);
 				
 				errorDecider = fromServer.readInt();
