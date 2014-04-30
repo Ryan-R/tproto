@@ -664,9 +664,7 @@ public class TrackerPrototype extends FragmentActivity
 				ScrollView signInScreenView = (ScrollView) findViewById(R.id.signInScreen);
 	        	FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
 	        	mainLayout.removeView(signInScreenView);
-			}
-			
-			//TODO get new requests
+			}			
 		}
 	}
 
