@@ -712,45 +712,6 @@ public class TrackerPrototype extends FragmentActivity
 		}
 	}
 	
-	/*Connects to server to handle Location Requests*/
-	class RequestLocation extends Connection{
-		String requester;
-		String requestee;
-		
-		@Override
-		protected Void doInBackground(String... params) {
-			requester = params[0];
-			requestee = params[1];
-			try {
-				// Tell what address and port to send information to
-				socket = new Socket(socketName, port);
-
-				fromServer = new DataInputStream(
-						socket.getInputStream());
-
-				toServer = new DataOutputStream(
-						socket.getOutputStream());
-				
-				toServer.writeInt(4);
-				toServer.writeUTF(requester);
-				toServer.writeUTF(requestee);
-				
-				errorDecider = fromServer.readInt();
-				
-				socket.close();
-			}
-			catch(IOException ex) {
-				System.err.println(ex);
-			}
-			return null;
-		}
-		
-		@Override
-		protected void onPostExecute(Void Result){	
-			//TODO Respond based off of error decider
-			//Toast.makeText(getApplicationContext(), response, Toast.LENGTH_SHORT).show();	
-		}
-	}
 	
 	/*Connects to server to handle Location Requests*/
 	class LocationRequest extends Connection{
