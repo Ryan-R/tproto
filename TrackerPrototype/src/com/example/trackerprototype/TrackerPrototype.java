@@ -575,14 +575,19 @@ public class TrackerPrototype extends FragmentActivity
 		protected void onPostExecute(Void Result){			
 			
 			switch (errorDecider){
-				case -1: 
-					Toast.makeText(getApplicationContext(), "Screen Name already used", Toast.LENGTH_SHORT).show();
-					Button button = (Button) findViewById(R.id.submit);
-					button.setEnabled(true);
-					return;
-				default:
-					break;
-			}
+			case -1: 
+				Toast.makeText(getApplicationContext(), "Server error", Toast.LENGTH_SHORT).show();
+				Button button = (Button) findViewById(R.id.submit);
+				button.setEnabled(true);
+				return;
+			case -2:
+				Toast.makeText(getApplicationContext(), "Screen name already exists", Toast.LENGTH_SHORT).show();
+				Button button = (Button) findViewById(R.id.submit);
+				button.setEnabled(true);
+				return;
+			default:
+				break;
+		}
 			userScreenName = screenName;
 			SharedPreferences.Editor optionsEditor = options.edit();
     		optionsEditor.putBoolean("firstTime", false);
@@ -632,21 +637,33 @@ public class TrackerPrototype extends FragmentActivity
 		@Override
 		protected void onPostExecute(Void Result){
 			switch (errorDecider){
-				case -1: 
-					//TODO (should not effect auto signin
-					if(!options.getBoolean("autoSignin", false)){
-						Toast.makeText(getApplicationContext(), "Incorrect screen name or password", Toast.LENGTH_SHORT).show();
-						Button button = (Button) findViewById(R.id.submit);
-						button.setEnabled(true);
-					}
-					else{
-						Toast.makeText(getApplicationContext(), "Error in signing in", Toast.LENGTH_SHORT).show();
-						signInScreen();
-					}
-					return;
-				default:
-					break;
-			}
+			case -1: 
+				//TODO (should not effect auto signin
+				if(!options.getBoolean("autoSignin", false)){
+					Toast.makeText(getApplicationContext(), "Server error", Toast.LENGTH_SHORT).show();
+					Button button = (Button) findViewById(R.id.submit);
+					button.setEnabled(true);
+				}
+				else{
+					Toast.makeText(getApplicationContext(), "Server error", Toast.LENGTH_SHORT).show();
+					signInScreen();
+				}
+				return;
+			case -3: 
+				//TODO (should not effect auto signin
+				if(!options.getBoolean("autoSignin", false)){
+					Toast.makeText(getApplicationContext(), "Incorrect screen name or password", Toast.LENGTH_SHORT).show();
+					Button button = (Button) findViewById(R.id.submit);
+					button.setEnabled(true);
+				}
+				else{
+					Toast.makeText(getApplicationContext(), "Error in signing in", Toast.LENGTH_SHORT).show();
+					signInScreen();
+				}
+				return;
+			default:
+				break;
+		}
 			
 			userScreenName = screenName;			
 			if(!options.getBoolean("autoSignin", false)){
@@ -707,8 +724,22 @@ public class TrackerPrototype extends FragmentActivity
 			screenName.setText("");		
 			Button request = (Button) findViewById(R.id.request);
 			request.setEnabled(true);
-			//TODO Respond based off of error decider
-			Toast.makeText(getApplicationContext(), "Friend Request Sent", Toast.LENGTH_SHORT).show();	
+			//TODO FIX Respond based off of error decider
+			switch (errorDecider){
+				case -1: 
+					Toast.makeText(getApplicationContext(), "Server error", Toast.LENGTH_SHORT).show();
+					return;
+				case -4: 
+					Toast.makeText(getApplicationContext(), "Friend Request already exists", Toast.LENGTH_SHORT).show();	
+					return;
+				case -5: 
+					Toast.makeText(getApplicationContext(), "Friend does not exist right now", Toast.LENGTH_SHORT).show();
+					return;
+				default:
+					break;
+			}
+			//what happens now????
+			Toast.makeText(getApplicationContext(), "Friend Request Sent", Toast.LENGTH_SHORT).show();
 		}
 	}
 	
@@ -749,7 +780,18 @@ public class TrackerPrototype extends FragmentActivity
 		@Override
 		protected void onPostExecute(Void Result){
 			
-			//TODO Respond based off of error decider
+			//TODO FIX Respond based off of error decider
+			switch (errorDecider){
+				case -1: 
+					Toast.makeText(getApplicationContext(), "Server error", Toast.LENGTH_SHORT).show();
+					return;
+				case -6: 
+					Toast.makeText(getApplicationContext(), "you are not friends with that user or they do not exist", Toast.LENGTH_SHORT).show();	
+					return;
+				default:
+					break;
+			}
+			//what happens now????
 			Toast.makeText(getApplicationContext(), "Location Request Sent", Toast.LENGTH_SHORT).show();
 		}
 	}
@@ -789,14 +831,13 @@ public class TrackerPrototype extends FragmentActivity
 		
 		@Override
 		protected void onPostExecute(Void Result){	
-			//TODO Respond based off of error decider
 			//Toast.makeText(getApplicationContext(), response, Toast.LENGTH_SHORT).show();	
 			switch (errorDecider){
-			case -1: 				
-				Toast.makeText(getApplicationContext(), "Error deleting", Toast.LENGTH_SHORT).show();
-			    return;
-			default:
-				break;
+				case -1: 				
+					Toast.makeText(getApplicationContext(), "Server error", Toast.LENGTH_SHORT).show();
+				    return;
+				default:
+					break;
 			}
 			Toast.makeText(getApplicationContext(), "Friend Deleted", Toast.LENGTH_SHORT).show();
 			RelativeLayout friendsScreenView = (RelativeLayout) findViewById(R.id.friendsScreen);
@@ -850,13 +891,12 @@ public class TrackerPrototype extends FragmentActivity
 		
 		@Override
 		protected void onPostExecute(Void Result){	
-			//TODO Respond based off of error decider
 			switch (errorDecider){
-			case -1: 				
-				Toast.makeText(getApplicationContext(), "Error sending response", Toast.LENGTH_SHORT).show();
-			    return;
-			default:
-				break;
+				case -1: 				
+					Toast.makeText(getApplicationContext(), "Server error", Toast.LENGTH_SHORT).show();
+				    return;
+				default:
+					break;
 			}
 			Toast.makeText(getApplicationContext(), "Response Sent", Toast.LENGTH_SHORT).show();
 			ScrollView notificationScreenView = (ScrollView) findViewById(R.id.notificationScreen);
@@ -904,13 +944,12 @@ public class TrackerPrototype extends FragmentActivity
 		
 		@Override
 		protected void onPostExecute(Void Result){	
-			//TODO Respond based off of error decider
 			switch (errorDecider){
-			case -1: 				
-				Toast.makeText(getApplicationContext(), "Error sending response", Toast.LENGTH_SHORT).show();
-			    return;
-			default:
-				break;
+				case -1: 				
+					Toast.makeText(getApplicationContext(), "Server error", Toast.LENGTH_SHORT).show();
+				    return;
+				default:
+					break;
 			}
 			Toast.makeText(getApplicationContext(), "Response Sent", Toast.LENGTH_SHORT).show();
 			ScrollView notificationScreenView = (ScrollView) findViewById(R.id.notificationScreen);
@@ -954,13 +993,12 @@ public class TrackerPrototype extends FragmentActivity
 		
 		@Override
 		protected void onPostExecute(Void Result){
-			//TODO Respond based off of error decider
 			switch (errorDecider){
-			case -1: 				
-				Toast.makeText(getApplicationContext(), "Error receiving friend's list", Toast.LENGTH_SHORT).show();
-			    return;
-			default:
-				break;
+				case -1: 				
+					Toast.makeText(getApplicationContext(), "Server error", Toast.LENGTH_SHORT).show();//reseving friends list?
+				    return;
+				default:
+					break;
 			}
 			inflateFriendList(friends);
 		}
@@ -1004,7 +1042,7 @@ public class TrackerPrototype extends FragmentActivity
 			//TODO Respond based off of error decider
 			switch (errorDecider){
 			case -1: 				
-				Toast.makeText(getApplicationContext(), "Error receiving notifications", Toast.LENGTH_SHORT).show();
+				Toast.makeText(getApplicationContext(), "Server error", Toast.LENGTH_SHORT).show();//receiving notifications?
 			    return;
 			default:
 				break;
@@ -1052,8 +1090,16 @@ public class TrackerPrototype extends FragmentActivity
 		
 		@Override
 		protected void onPostExecute(Void Result){	
-			//TODO Respond based off of error decider
-			//TODO generate route/direction to recieved location of requestee
+			switch (errorDecider){
+				case -1: 				
+					Toast.makeText(getApplicationContext(), "Server error", Toast.LENGTH_SHORT).show();
+				    return;
+				case -2:
+					Toast.makeText(getApplicationContext(), "error getting latitude and longitude", Toast.LENGTH_SHORT).show();
+				    return;
+				default:
+					break;
+			}			//TODO generate route/direction to recieved location of requestee
 			//Toast.makeText(getApplicationContext(), response, Toast.LENGTH_SHORT).show();	
 		}
 	}
