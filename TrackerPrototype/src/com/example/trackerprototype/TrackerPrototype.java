@@ -8,17 +8,17 @@ import java.net.Socket;
 import java.util.StringTokenizer;
 
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.location.Location;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -123,11 +123,26 @@ public class TrackerPrototype extends FragmentActivity
     }
 
 	//Screen for user to register an account
-	//TODO textwatchers and regex
+	//TODO regex
 	//TODO add already registered button button
 	private void registerScreen() {
 		FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
 	    View.inflate(this, R.layout.register_screen_view, mainLayout);
+	    ((EditText)findViewById(R.id.passwordConfirm)).addTextChangedListener(new TextWatcher() {
+	    	public void onTextChanged(CharSequence s, int start, int before, int count) {
+	    		if (((EditText) findViewById(R.id.passwordConfirm)).getText().toString().compareTo(((EditText) findViewById(R.id.password)).getText().toString()) != 0) {
+	    			((EditText) findViewById(R.id.passwordConfirm)).setTextColor(Color.RED);
+	    		} else {
+	    			((EditText) findViewById(R.id.passwordConfirm)).setTextColor(Color.BLACK);
+	    		}
+            }
+
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            public void afterTextChanged(Editable s) {
+            }	    
+	    });
 	    Button button = (Button) findViewById(R.id.submit);
 	    button.setOnClickListener(new OnClickListener() {
         	@Override
@@ -141,8 +156,15 @@ public class TrackerPrototype extends FragmentActivity
         		String lastName = ((EditText)findViewById(R.id.lastName)).getText().toString();
         		Log.d("l", screenName + password + passwordConfirm + birthYear + firstName + lastName);
         		
-        		//check screenName
+        		//check screenName for length
         		if(screenName.length() == 0 || screenName.length() > 25){
+        			Toast.makeText(getApplicationContext(), "Bad Screen Name", Toast.LENGTH_SHORT).show();
+        			v.setEnabled(true);
+        			return;
+        		}
+        		
+        		//check screenName for a-z, A-Z, or 0-9
+        		if(!screenName.matches("(\\w+)")) {
         			Toast.makeText(getApplicationContext(), "Bad Screen Name", Toast.LENGTH_SHORT).show();
         			v.setEnabled(true);
         			return;
@@ -150,6 +172,12 @@ public class TrackerPrototype extends FragmentActivity
         		
         		//check password
         		if(password.length() == 0 || password.length() > 30 || !password.equals(passwordConfirm)){
+        			Toast.makeText(getApplicationContext(), "Bad Password", Toast.LENGTH_SHORT).show();
+        			v.setEnabled(true);
+        			return;
+        		}
+        		
+        		if(!password.matches("(\\w+)")) {
         			Toast.makeText(getApplicationContext(), "Bad Password", Toast.LENGTH_SHORT).show();
         			v.setEnabled(true);
         			return;
@@ -180,7 +208,7 @@ public class TrackerPrototype extends FragmentActivity
         		connection.execute(screenName, password, birthYear.toString(), firstName, lastName);       		
         		
             }
-        });	
+        });		
 	    
 	    Button login = (Button) findViewById(R.id.login);
 	    login.setOnClickListener(new OnClickListener() {
