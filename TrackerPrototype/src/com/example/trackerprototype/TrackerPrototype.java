@@ -573,17 +573,15 @@ public class TrackerPrototype extends FragmentActivity
 		
 		@Override
 		protected void onPostExecute(Void Result){			
+			Button button = (Button) findViewById(R.id.submit);
+			button.setEnabled(true);
 			
 			switch (errorDecider){
 			case -1: 
-				Toast.makeText(getApplicationContext(), "Server error", Toast.LENGTH_SHORT).show();
-				Button button = (Button) findViewById(R.id.submit);
-				button.setEnabled(true);
+				Toast.makeText(getApplicationContext(), "Server error", Toast.LENGTH_SHORT).show();				
 				return;
 			case -2:
-				Toast.makeText(getApplicationContext(), "Screen name already exists", Toast.LENGTH_SHORT).show();
-				Button button = (Button) findViewById(R.id.submit);
-				button.setEnabled(true);
+				Toast.makeText(getApplicationContext(), "Screen name already exists", Toast.LENGTH_SHORT).show();				
 				return;
 			default:
 				break;
@@ -786,7 +784,7 @@ public class TrackerPrototype extends FragmentActivity
 					Toast.makeText(getApplicationContext(), "Server error", Toast.LENGTH_SHORT).show();
 					return;
 				case -6: 
-					Toast.makeText(getApplicationContext(), "you are not friends with that user or they do not exist", Toast.LENGTH_SHORT).show();	
+					Toast.makeText(getApplicationContext(), "Friends does not exist", Toast.LENGTH_SHORT).show();	
 					return;
 				default:
 					break;
@@ -1095,7 +1093,7 @@ public class TrackerPrototype extends FragmentActivity
 					Toast.makeText(getApplicationContext(), "Server error", Toast.LENGTH_SHORT).show();
 				    return;
 				case -2:
-					Toast.makeText(getApplicationContext(), "error getting latitude and longitude", Toast.LENGTH_SHORT).show();
+					Toast.makeText(getApplicationContext(), "Error getting latitude and longitude", Toast.LENGTH_SHORT).show();
 				    return;
 				default:
 					break;
