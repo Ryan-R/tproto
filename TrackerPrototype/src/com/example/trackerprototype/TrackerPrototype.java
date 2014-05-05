@@ -7,16 +7,20 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.StringTokenizer;
 
+import org.w3c.dom.Document;
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.text.Editable;
+import android.text.Html;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Menu;
@@ -34,13 +38,16 @@ import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.trackerprototype.GoogleDirection.OnDirectionResponseListener;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
 import com.google.android.gms.location.LocationClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 
 public class TrackerPrototype extends FragmentActivity
@@ -55,10 +62,13 @@ public class TrackerPrototype extends FragmentActivity
 	private SharedPreferences account;  //holds login information
 	private String userScreenName = "";
 	private SharedPreferences friends;  //holds friend information
+	private SharedPreferences acceptedLocation; //holds accepted location information
 	private boolean menuCheck = true; //if menu is allowed
 	private GoogleMap map;
+	private GoogleDirection direction;
 	private LocationClient locationClient;
 	private Location userLocation;
+	
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -83,7 +93,7 @@ public class TrackerPrototype extends FragmentActivity
 		
 		options = getSharedPreferences("options", MODE_PRIVATE);
 		account = getSharedPreferences("account", MODE_PRIVATE);
-		
+		acceptedLocation = getSharedPreferences("location", MODE_PRIVATE);
 		//if it not the users first time
 		if(!options.getBoolean("firstTime", true)){
 			//if the user chooses to use the autoSignin feature
@@ -124,7 +134,6 @@ public class TrackerPrototype extends FragmentActivity
 
 	//Screen for user to register an account
 	//TODO regex
-	//TODO add already registered button button
 	private void registerScreen() {
 		FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
 	    View.inflate(this, R.layout.register_screen_view, mainLayout);
@@ -523,11 +532,87 @@ public class TrackerPrototype extends FragmentActivity
 		exit.setEnabled(true);
 	}
 	
-	//TODO create actual menu
+	private void directionsScreen(String screenname){
+		menuCheck = false;
+		FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
+		View directionScreenView = View.inflate(this, R.layout.directions_screen_view, mainLayout);
+		TextView titleView = (TextView)directionScreenView.findViewById(R.id.directionTitle);  
+		titleView.setText("Directions to " + screenname);
+	    Button exit = (Button) findViewById(R.id.exit);
+	    exit.setOnClickListener(new OnClickListener() {
+	      	@Override
+	        public void onClick(View v) { 
+	       		RelativeLayout directionsScreenView = (RelativeLayout) findViewById(R.id.directionsScreen);
+	       		FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
+	       		mainLayout.removeView(directionsScreenView);
+	      		menuCheck = true;
+	        }
+	    });
+	    exit.setEnabled(false);
+	    
+	    inflateDirections(screenname);
+	}
+	
+	//TODO get directions from document
+	private void inflateDirections(String screenname){
+		int i = 0;
+		TableLayout directionsTableLayout = (TableLayout) findViewById(R.id.directionsTable);
+		TextView instructionView;
+		TextView distanceView;
+		View directionView;
+		String instruction, distance;		
+		String tokenizedSteps = acceptedLocation.getString(screenname, "Failed to load/?/");
+		StringTokenizer st = new StringTokenizer(tokenizedSteps, "+");
+		
+		while (st.hasMoreTokens()) {
+		    instruction = st.nextToken();
+		    Log.i("youknow",instruction);
+		    directionView = View.inflate(this, R.layout.direction, directionsTableLayout);
+		    instructionView = (TextView)directionView.findViewById(R.id.instruction);
+		    instructionView.setText(Html.fromHtml(instruction));
+		    instructionView.setId(Integer.MAX_VALUE - i++);
+		    
+		    distance = st.nextToken();
+		    Log.i("youknow",distance);
+		    distanceView = (TextView)directionView.findViewById(R.id.distance);
+		    distanceView.setText(distance);	
+		    distanceView.setId(Integer.MAX_VALUE - i++);
+		}		 
+		   
+		Button exit = (Button) findViewById(R.id.exit);
+		exit.setEnabled(true);
+	}
+	
+	public void test(){
+
+        userLocation = locationClient.getLastLocation();
+                
+        direction = new GoogleDirection(this);
+        direction.setOnDirectionResponseListener(new OnDirectionResponseListener() {
+			public void onResponse(String status, Document doc, GoogleDirection gd) {
+				map.addPolyline(gd.getPolyline(doc, 3, Color.RED));				
+		        map.addMarker(new MarkerOptions().position(new LatLng(userLocation.getLatitude(),userLocation.getLongitude()))
+		        	    .icon(BitmapDescriptorFactory.defaultMarker(
+		        	    BitmapDescriptorFactory.HUE_GREEN)));
+        
+		        map.addMarker(new MarkerOptions().position(new LatLng(38.7559029,-93.7375428))
+		        	    .icon(BitmapDescriptorFactory.defaultMarker(
+		        	    BitmapDescriptorFactory.HUE_GREEN)));
+		        
+		        Editor edit = acceptedLocation.edit();
+		        edit.putString("test", direction.getStepInstruction(doc));
+		        edit.commit();
+		       
+			}
+		});
+        
+        direction.request(new LatLng(userLocation.getLatitude(),userLocation.getLongitude()),
+        		new LatLng(38.7559029,-93.7375428), GoogleDirection.MODE_DRIVING);
+	}
+	
 	//friends list, options, help screen, notifications
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		//TODO Inflate the menu; this adds items to the action bar if it is present.
 		getMenuInflater().inflate(R.menu.activity_main, menu);
 		return true;
 	}
@@ -551,6 +636,12 @@ public class TrackerPrototype extends FragmentActivity
 	    		return true;
 	        case R.id.notifications:
 	            notificationScreen();
+	            return true;
+	        case R.id.test:
+	            directionsScreen("test");
+	            return true;
+	        case R.id.test2:
+	            test();
 	            return true;
 	        default:
 	            return super.onOptionsItemSelected(item);
@@ -750,7 +841,7 @@ public class TrackerPrototype extends FragmentActivity
 			screenName.setText("");		
 			Button request = (Button) findViewById(R.id.request);
 			request.setEnabled(true);
-			//TODO FIX Respond based off of error decider
+			
 			switch (errorDecider){
 				case -1: 
 					Toast.makeText(getApplicationContext(), "Server error", Toast.LENGTH_SHORT).show();
@@ -764,7 +855,7 @@ public class TrackerPrototype extends FragmentActivity
 				default:
 					break;
 			}
-			//what happens now????
+			
 			Toast.makeText(getApplicationContext(), "Friend Request Sent", Toast.LENGTH_SHORT).show();
 		}
 	}
@@ -806,7 +897,6 @@ public class TrackerPrototype extends FragmentActivity
 		@Override
 		protected void onPostExecute(Void Result){
 			
-			//TODO FIX Respond based off of error decider
 			switch (errorDecider){
 				case -1: 
 					Toast.makeText(getApplicationContext(), "Server error", Toast.LENGTH_SHORT).show();
@@ -817,7 +907,7 @@ public class TrackerPrototype extends FragmentActivity
 				default:
 					break;
 			}
-			//what happens now????
+			
 			Toast.makeText(getApplicationContext(), "Location Request Sent", Toast.LENGTH_SHORT).show();
 		}
 	}
@@ -1065,7 +1155,6 @@ public class TrackerPrototype extends FragmentActivity
 		@Override
 		protected void onPostExecute(Void Result){	
 			
-			//TODO Respond based off of error decider
 			switch (errorDecider){
 			case -1: 				
 				Toast.makeText(getApplicationContext(), "Server error", Toast.LENGTH_SHORT).show();//receiving notifications?

@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -97,7 +96,7 @@ public class GoogleDirection {
         final String url = "http://maps.googleapis.com/maps/api/directions/xml?"
                 + "origin=" + start.latitude + "," + start.longitude  
                 + "&destination=" + end.latitude + "," + end.longitude 
-                + "&sensor=false&units=metric&mode=" + mode;
+                + "&sensor=false&units=imperial&mode=" + mode; //changed to imperial
 
    		if(isLogging)
    			Log.i("GoogleDirection", "URL : " + url);
@@ -249,11 +248,19 @@ public class GoogleDirection {
     }
    	
    	//TODO Function added to get step by step instructions
-   	public String[] getStepIntstruction(Document doc){
-   		NodeList nl1 = doc.getElementsByTagName("step");
-   		String[] arr_str = new String[nl1.getLength() - 1];
-   		
-   		return arr_str;
+   	public String getStepInstruction(Document doc){
+   		NodeList steps = doc.getElementsByTagName("step");
+   		String tokenizedSteps = "";
+   		for(int i = 0 ; i < steps.getLength() - 1 ; i++){
+   			NodeList step = steps.item(i).getChildNodes();
+   			String instruction = step.item(getNodeIndex(step, "html_instructions")).getTextContent();
+   			NodeList distance = step.item(getNodeIndex(step, "distance")).getChildNodes();
+   			String distanceText = distance.item(getNodeIndex(distance, "text")).getTextContent();
+   			
+   			tokenizedSteps += (instruction + "+" + distanceText + "+");
+   		}
+   		tokenizedSteps = tokenizedSteps.substring(0, tokenizedSteps.length()-1);
+   		return tokenizedSteps;
    	}
  
     public String getStartAddress(Document doc) {
