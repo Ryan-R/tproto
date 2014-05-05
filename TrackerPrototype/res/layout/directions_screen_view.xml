@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/directionsScreen"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#DD000000" >
+  
+    
+<TextView
+	    android:id="@+id/directionTitle"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:layout_alignParentTop="true"
+	    android:layout_centerHorizontal="true"
+	    android:layout_marginTop="25dp"
+	    android:alpha="1"
+	    android:text="Directions"
+	    android:textColor="#FFFFFF"
+	    android:textSize="30sp" />    
+    
+<Button
+	    android:id="@+id/exit"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:layout_alignParentRight="true"
+	    android:layout_alignParentTop="true"
+	    android:text="x" />
+    
+<ScrollView 
+    android:id="@+id/directionsList"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:scrollbars="vertical"
+    android:layout_below="@+id/directionTitle" >
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >	
+
+	<TableLayout
+	    android:id="@+id/directionsTable"
+	    android:layout_width="match_parent"
+	    android:layout_height="match_parent">       
+	    
+	</TableLayout>    	
+
+	
+
+	</RelativeLayout>
+</ScrollView>
+
+</RelativeLayout>
+
+
