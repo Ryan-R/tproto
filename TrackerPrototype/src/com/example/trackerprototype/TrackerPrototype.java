@@ -298,12 +298,24 @@ public class TrackerPrototype extends FragmentActivity
         			return;
         		}
         		
+        		if(!screenName.matches("(\\w+)")) {
+        			Toast.makeText(getApplicationContext(), "Bad Screen Name", Toast.LENGTH_SHORT).show();
+        			v.setEnabled(true);
+        			return;
+        		}
+        		
         		//check password
         		if(password.length() == 0 || password.length() > 30){
         			Toast.makeText(getApplicationContext(), "Bad Password", Toast.LENGTH_SHORT).show();
         			v.setEnabled(true);
         			return;
-        		}       		
+        		}   
+        		
+        		if(!password.matches("(\\w+)")) {
+        			Toast.makeText(getApplicationContext(), "Bad Password", Toast.LENGTH_SHORT).show();
+        			v.setEnabled(true);
+        			return;
+        		}
             	
         		SignIn connection = new SignIn();
         		connection.execute(screenName, password);
