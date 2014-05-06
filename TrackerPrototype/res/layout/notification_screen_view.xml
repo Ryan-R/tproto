@@ -21,9 +21,8 @@
 	    android:text="Notifications"
 	    android:textColor="#FFFFFF"
 	    android:textSize="30sp" />
-
-	<TableLayout
-	    android:id="@+id/locationRequestTable"
+    <TableLayout
+	    android:id="@+id/acceptedLocationRequestTable"
 	    android:layout_width="match_parent"
 	    android:layout_height="match_parent"
 	    android:layout_below="@+id/textView1">
@@ -33,6 +32,45 @@
 
 	        <TextView
 	            android:id="@+id/textView2"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:layout_gravity="center"
+	            android:layout_marginTop="15dp"
+	            android:alpha="1"
+	            android:gravity="center"
+	            android:text="Accepted Location Requests"
+	            android:textAlignment="center"
+	            android:textColor="#FFFFFF"
+	            android:textSize="25sp" />
+ 
+	    </TableRow>	    
+	    <TableRow android:gravity="center"
+	              android:layout_width="match_parent" >
+
+	        <TextView
+	            android:id="@+id/acceptedLocationRequests"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:layout_gravity="center"
+	            android:layout_marginTop="5dp"
+	            android:alpha="1"
+	            android:text="No accepted location requests"
+	            android:textColor="#FFFFFF"
+	            android:textSize="15sp" />
+ 
+	    </TableRow>
+	</TableLayout>    
+	<TableLayout
+	    android:id="@+id/locationRequestTable"
+	    android:layout_width="match_parent"
+	    android:layout_height="match_parent"
+	    android:layout_below="@+id/acceptedLocationRequestTable">
+
+	    <TableRow android:gravity="center"
+	        	  android:layout_width="match_parent" >
+
+	        <TextView
+	            android:id="@+id/textView3"
 	            android:layout_width="wrap_content"
 	            android:layout_height="wrap_content"
 	            android:layout_marginTop="15dp"
@@ -69,7 +107,7 @@
 	        	  android:layout_width="match_parent" >
 
 	        <TextView
-	            android:id="@+id/textView3"
+	            android:id="@+id/textView4"
 	            android:layout_width="wrap_content"
 	            android:layout_height="wrap_content"
 	            android:layout_marginTop="15dp"

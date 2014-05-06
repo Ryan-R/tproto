@@ -6,11 +6,12 @@
     
     <TextView
         android:id="@+id/instruction"
-        android:layout_width="fill_parent"
+        android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="5dp"
         android:alpha="1"
         android:gravity="left"
+        android:singleLine="false"
         android:text="instruction"
         android:textColor="#FFFFFF"
         android:textSize="15sp" />

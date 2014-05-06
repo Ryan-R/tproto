@@ -298,24 +298,12 @@ public class TrackerPrototype extends FragmentActivity
         			return;
         		}
         		
-        		if(!screenName.matches("(\\w+)")) {
-        			Toast.makeText(getApplicationContext(), "Bad Screen Name", Toast.LENGTH_SHORT).show();
-        			v.setEnabled(true);
-        			return;
-        		}
-        		
         		//check password
         		if(password.length() == 0 || password.length() > 30){
         			Toast.makeText(getApplicationContext(), "Bad Password", Toast.LENGTH_SHORT).show();
         			v.setEnabled(true);
         			return;
-        		}   
-        		
-        		if(!password.matches("(\\w+)")) {
-        			Toast.makeText(getApplicationContext(), "Bad Password", Toast.LENGTH_SHORT).show();
-        			v.setEnabled(true);
-        			return;
-        		}
+        		}       		
             	
         		SignIn connection = new SignIn();
         		connection.execute(screenName, password);
@@ -357,14 +345,40 @@ public class TrackerPrototype extends FragmentActivity
 	
 	private void inflateNotifications(String notifications){
 		int i = 0;
-		boolean lflag = false, fflag = false;
+		boolean alflag = false, lflag = false, fflag = false; 
 		final Context context = this;
+		TableLayout acceptedLocationTableLayout = (TableLayout) findViewById(R.id.acceptedLocationRequestTable);
 		TableLayout locationTableLayout = (TableLayout) findViewById(R.id.locationRequestTable);
 		TableLayout friendTableLayout = (TableLayout) findViewById(R.id.friendRequestTable);
 		TextView screenNameView;
 		View notificationView;
 		StringTokenizer st = new StringTokenizer(notifications, "/");
 		String screenName = "";
+		//accepted location requests
+		st.nextToken();
+		    while (st.hasMoreTokens()) {
+		        screenName = st.nextToken();
+		        if(screenName.equals("location")) break;
+		        final int newId = Integer.MAX_VALUE - i++; //creates new id so screenName id can be referenced
+		        notificationView = View.inflate(this, R.layout.notification, acceptedLocationTableLayout);
+		        screenNameView = (TextView)notificationView.findViewById(R.id.screenName);
+			    screenNameView.setText(screenName);
+			    screenNameView.setId(newId);
+				    
+			    Button respond = (Button) notificationView.findViewById(R.id.respond);
+			    respond.setText("Locate");
+			    respond.setId(Integer.MAX_VALUE - i++);
+			    respond.setOnClickListener(new OnClickListener() {
+			    	@Override
+			    	public void onClick(View v) { 
+			    		final String  name = ((TextView)((View) v.getParent()).findViewById(newId)).getText().toString();
+			    		
+				    	GetLocation connection = new GetLocation();
+				    	connection.execute(userScreenName, name);				    			
+			    	}	
+				 });
+		    alflag = true;
+	    }
 		//location requests
 		st.nextToken();
 	    while (st.hasMoreTokens()) {
@@ -443,6 +457,8 @@ public class TrackerPrototype extends FragmentActivity
 		    });
 		    fflag = true;
 	    }
+	    
+	    if(alflag) acceptedLocationTableLayout.findViewById(R.id.acceptedLocationRequests).setVisibility(View.GONE);
 	    
 	    if(lflag) locationTableLayout.findViewById(R.id.locationRequests).setVisibility(View.GONE);
 	    
@@ -595,7 +611,9 @@ public class TrackerPrototype extends FragmentActivity
 		exit.setEnabled(true);
 	}
 	
-	public void test(){
+	
+	//TODO use as router, catch same location error
+	public void getRoute(final String name, final double lat, final double lng){
 
         userLocation = locationClient.getLastLocation();
                 
@@ -607,19 +625,21 @@ public class TrackerPrototype extends FragmentActivity
 		        	    .icon(BitmapDescriptorFactory.defaultMarker(
 		        	    BitmapDescriptorFactory.HUE_GREEN)));
         
-		        map.addMarker(new MarkerOptions().position(new LatLng(38.7559029,-93.7375428))
+		        map.addMarker(new MarkerOptions().position(new LatLng(lat,lng))
 		        	    .icon(BitmapDescriptorFactory.defaultMarker(
 		        	    BitmapDescriptorFactory.HUE_GREEN)));
 		        
 		        Editor edit = acceptedLocation.edit();
-		        edit.putString("test", direction.getStepInstruction(doc));
+		        //set key/value pair as instructions, (polyline) not yet, and name
+		        edit.putString("instructions", direction.getStepInstruction(doc));
+		        edit.putString("name", name);
 		        edit.commit();
 		       
 			}
 		});
         
         direction.request(new LatLng(userLocation.getLatitude(),userLocation.getLongitude()),
-        		new LatLng(38.7559029,-93.7375428), GoogleDirection.MODE_DRIVING);
+        		new LatLng(lat,lng), GoogleDirection.MODE_DRIVING);
 	}
 	
 	//friends list, options, help screen, notifications
@@ -650,10 +670,10 @@ public class TrackerPrototype extends FragmentActivity
 	            notificationScreen();
 	            return true;
 	        case R.id.test:
-	            directionsScreen("test");
+	            directionsScreen(acceptedLocation.getString("name", "?"));
 	            return true;
 	        case R.id.test2:
-	            test();
+	            getRoute("test", 38.7559029, -93.7375428);
 	            return true;
 	        default:
 	            return super.onOptionsItemSelected(item);
@@ -1122,7 +1142,8 @@ public class TrackerPrototype extends FragmentActivity
 		@Override
 		protected void onPostExecute(Void Result){
 			switch (errorDecider){
-				case -1: 				
+				case -1: 		
+					//TODO enable the exit button
 					Toast.makeText(getApplicationContext(), "Server error", Toast.LENGTH_SHORT).show();//reseving friends list?
 				    return;
 				default:
@@ -1168,7 +1189,8 @@ public class TrackerPrototype extends FragmentActivity
 		protected void onPostExecute(Void Result){	
 			
 			switch (errorDecider){
-			case -1: 				
+			case -1: 	
+				//TODO enable the exit button
 				Toast.makeText(getApplicationContext(), "Server error", Toast.LENGTH_SHORT).show();//receiving notifications?
 			    return;
 			default:
@@ -1180,7 +1202,7 @@ public class TrackerPrototype extends FragmentActivity
 	}
 	
 	/*Connects to server to handle getting the user's requested location*/
-	class GetLocations extends Connection{
+	class GetLocation extends Connection{
 		String requester;
 		String requestee;
 		double lastKnownLat;
@@ -1189,6 +1211,7 @@ public class TrackerPrototype extends FragmentActivity
 		@Override
 		protected Void doInBackground(String... params) {
 			requester = params[0];
+			requestee = params[1];
 			try {
 				// Tell what address and port to send information to
 				socket = new Socket(socketName, port);
@@ -1201,11 +1224,11 @@ public class TrackerPrototype extends FragmentActivity
 				
 				toServer.writeInt(10);
 				toServer.writeUTF(requester);
+				toServer.writeUTF(requestee);
 				
-				errorDecider = fromServer.readInt();
-				requestee = fromServer.readUTF();
 				lastKnownLat = fromServer.readDouble();
 				lastKnownLong = fromServer.readDouble();
+				errorDecider = fromServer.readInt();				
 				
 				socket.close();
 			}
@@ -1227,7 +1250,11 @@ public class TrackerPrototype extends FragmentActivity
 				default:
 					break;
 			}			//TODO generate route/direction to recieved location of requestee
-			//Toast.makeText(getApplicationContext(), response, Toast.LENGTH_SHORT).show();	
+			ScrollView notificationScreenView = (ScrollView) findViewById(R.id.notificationScreen);
+    		FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
+    		mainLayout.removeView(notificationScreenView);
+    		menuCheck = true;
+			getRoute(requestee, lastKnownLat, lastKnownLong);
 		}
 	}
 
