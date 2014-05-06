@@ -21,29 +21,27 @@
 	    android:text="Notifications"
 	    android:textColor="#FFFFFF"
 	    android:textSize="30sp" />
+
+	<TextView
+	    android:id="@+id/textView2"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:layout_below="@id/textView1"
+	    android:layout_marginTop="15dp"
+	    android:alpha="1"
+	    android:gravity="center"
+	    android:paddingBottom="5dp"
+	    android:text="Accepted Location Requests"
+	    android:textAlignment="center"
+	    android:textColor="#FFFFFF"
+	    android:textSize="25sp" />
+
     <TableLayout
-	    android:id="@+id/acceptedLocationRequestTable"
-	    android:layout_width="match_parent"
-	    android:layout_height="match_parent"
-	    android:layout_below="@+id/textView1">
-
-	    <TableRow android:gravity="center"
-	        	  android:layout_width="match_parent" >
-
-	        <TextView
-	            android:id="@+id/textView2"
-	            android:layout_width="wrap_content"
-	            android:layout_height="wrap_content"
-	            android:layout_gravity="center"
-	            android:layout_marginTop="15dp"
-	            android:alpha="1"
-	            android:gravity="center"
-	            android:text="Accepted Location Requests"
-	            android:textAlignment="center"
-	            android:textColor="#FFFFFF"
-	            android:textSize="25sp" />
- 
-	    </TableRow>	    
+        android:id="@+id/acceptedLocationRequestTable"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/textView2" >
+	    
 	    <TableRow android:gravity="center"
 	              android:layout_width="match_parent" >
 
@@ -54,32 +52,34 @@
 	            android:layout_gravity="center"
 	            android:layout_marginTop="5dp"
 	            android:alpha="1"
-	            android:text="No accepted location requests"
+	            android:text="No new location requests"
 	            android:textColor="#FFFFFF"
 	            android:textSize="15sp" />
  
 	    </TableRow>
-	</TableLayout>    
+	</TableLayout>
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/acceptedLocationRequestTable"
+        android:layout_marginTop="15dp"
+        android:gravity="center"
+        android:textAlignment="center"
+        android:layout_centerHorizontal="true"
+        android:alpha="1"
+        android:paddingBottom="5dp"
+        android:text="Location Requests"
+        android:textColor="#FFFFFF"
+        android:textSize="25sp" />
+    
 	<TableLayout
 	    android:id="@+id/locationRequestTable"
 	    android:layout_width="match_parent"
 	    android:layout_height="match_parent"
-	    android:layout_below="@+id/acceptedLocationRequestTable">
-
-	    <TableRow android:gravity="center"
-	        	  android:layout_width="match_parent" >
-
-	        <TextView
-	            android:id="@+id/textView3"
-	            android:layout_width="wrap_content"
-	            android:layout_height="wrap_content"
-	            android:layout_marginTop="15dp"
-	            android:alpha="1"
-	            android:text="Location Requests"
-	            android:textColor="#FFFFFF"
-	            android:textSize="25sp" />
- 
-	    </TableRow>	    
+	    android:layout_below="@id/textView3" >
+	    
 	    <TableRow android:gravity="center"
 	              android:layout_width="match_parent" >
 
@@ -96,27 +96,29 @@
  
 	    </TableRow>
 	    
-	</TableLayout>    
+	</TableLayout>
+
+	<TextView
+	    android:id="@+id/textView4"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:layout_below="@id/locationRequestTable"
+	    android:layout_marginTop="15dp"
+	    android:gravity="center"
+        android:textAlignment="center"
+        android:layout_centerHorizontal="true"
+	    android:alpha="1"
+	    android:paddingBottom="5dp"
+	    android:text="Friend Requests"
+	    android:textColor="#FFFFFF"
+	    android:textSize="25sp" />
+    
 	<TableLayout
 	    android:id="@+id/friendRequestTable"
 	    android:layout_width="match_parent"
 	    android:layout_height="match_parent"
-	    android:layout_below="@+id/locationRequestTable">
-
-	    <TableRow android:gravity="center"
-	        	  android:layout_width="match_parent" >
-
-	        <TextView
-	            android:id="@+id/textView4"
-	            android:layout_width="wrap_content"
-	            android:layout_height="wrap_content"
-	            android:layout_marginTop="15dp"
-	            android:alpha="1"
-	            android:text="Friend Requests"
-	            android:textColor="#FFFFFF"
-	            android:textSize="25sp" />
- 
-	    </TableRow>	    
+	    android:layout_below="@id/textView4" >
+	    
 	    <TableRow android:gravity="center"
 	              android:layout_width="match_parent" >
 

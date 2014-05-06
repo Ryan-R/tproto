@@ -380,7 +380,7 @@ public class TrackerPrototype extends FragmentActivity
 		    alflag = true;
 	    }
 		//location requests
-		st.nextToken();
+
 	    while (st.hasMoreTokens()) {
 	        screenName = st.nextToken();
 	        if(screenName.equals("friend")) break;
@@ -589,7 +589,7 @@ public class TrackerPrototype extends FragmentActivity
 		TextView distanceView;
 		View directionView;
 		String instruction, distance;		
-		String tokenizedSteps = acceptedLocation.getString(screenname, "Failed to load/?/");
+		String tokenizedSteps = acceptedLocation.getString("instructions", "Failed to load/?/");
 		StringTokenizer st = new StringTokenizer(tokenizedSteps, "+");
 		
 		while (st.hasMoreTokens()) {
