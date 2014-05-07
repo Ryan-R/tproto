@@ -6,6 +6,12 @@ import java.net.Socket;
 
 import android.os.AsyncTask;
 
+/**
+ * Connection to server
+ * Creates an asynchronous task to connect to Server
+ * @author Ryan
+ *
+ */
 public class Connection extends AsyncTask<String, Void, Void>{
 
 	protected Socket socket;

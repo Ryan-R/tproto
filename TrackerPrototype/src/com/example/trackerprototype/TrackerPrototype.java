@@ -1,4 +1,9 @@
 //TODO Heart Beat to Server
+/*
+ * This is the Main Activity of the application designed for 
+ * UCM's CS4910-Software Engineering
+ * by: Nicholas Lockhart NSL24980, Russell Michal RKM87480, Ryan Rickard RLR19630
+ */
 package com.example.trackerprototype;
 
 import java.io.DataInputStream;
@@ -10,6 +15,7 @@ import java.util.StringTokenizer;
 import org.w3c.dom.Document;
 
 import android.app.AlertDialog;
+import android.app.Application;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.IntentSender;
@@ -47,34 +53,37 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-
+/* Main activity that allows fragments(for the GoogleMap API v2 map)
+ * Implements google play services in order to create a connection
+ */
 public class TrackerPrototype extends FragmentActivity
     implements GooglePlayServicesClient.ConnectionCallbacks,
         GooglePlayServicesClient.OnConnectionFailedListener
 {
 	
-	private static final int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
+	private static final int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000; //failure code for connection
 	private SharedPreferences options;  //holds option information
-	//Better way of doing this
-	//http://stackoverflow.com/questions/1925486/android-storing-username-and-password
 	private SharedPreferences account;  //holds login information
-	private String userScreenName = ""; //Current user's screenname
 	private SharedPreferences acceptedLocation; //holds accepted location information
+	private String userScreenName = ""; //Current user's screenname
 	private boolean menuCheck = true; //if menu is allowed
-	private boolean routeDisplayed = false;
-	private GoogleMap map;
+	private boolean routeDisplayed = false; //if route is displayed
+	private GoogleMap map; 
 	private GoogleDirection direction;
 	private LocationClient locationClient;
 	private Location userLocation;
 	
-
+	/**
+	 * Called when application is started on the user's device
+	 */
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
-		
+		//Set map from API
 		if((map = ((SupportMapFragment) getSupportFragmentManager().
 				findFragmentById(R.id.mapview)).getMap()) == null)
 		{
@@ -85,11 +94,12 @@ public class TrackerPrototype extends FragmentActivity
 			map.setMapType(GoogleMap.MAP_TYPE_NORMAL);
 			map.getUiSettings().setZoomControlsEnabled(false);
 			map.getUiSettings().setMyLocationButtonEnabled(true);
-			map.setMyLocationEnabled(true);
-			map.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(38.762789,-93.736050), 14));
-			//TODO change to go to users location
+			map.setMyLocationEnabled(true);			
 		}
 		
+		if(!userScreenName.equals("")){
+			return;
+		}
 		
 		options = getSharedPreferences("options", MODE_PRIVATE);
 		account = getSharedPreferences("account", MODE_PRIVATE);
@@ -98,8 +108,6 @@ public class TrackerPrototype extends FragmentActivity
 		if(!options.getBoolean("firstTime", true)){
 			//if the user chooses to use the autoSignin feature
 			if(options.getBoolean("autoSignin", false)){
-				//Better way of doing this
-				//http://stackoverflow.com/questions/1925486/android-storing-username-and-password
 				String screenName = account.getString("screenName", "");
 				String password = account.getString("password", "");
 				SignIn connection = new SignIn();
@@ -122,7 +130,7 @@ public class TrackerPrototype extends FragmentActivity
     protected void onStart() {
         super.onStart();
         // Connect the client.
-        locationClient.connect();
+        locationClient.connect();        
     }
 	
 	@Override
@@ -132,8 +140,9 @@ public class TrackerPrototype extends FragmentActivity
         super.onStop();
     }
 
-	//Screen for user to register an account
-	//TODO regex
+	/**
+	 * Show register screen
+	 */
 	private void registerScreen() {
 		FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
 	    View.inflate(this, R.layout.register_screen_view, mainLayout);
@@ -231,23 +240,6 @@ public class TrackerPrototype extends FragmentActivity
 	    });
 	}	
 	
-	//Screen to explain how to use the application
-	//TODO actual tutorial or help screen
-	private void tutorialScreen(){
-		FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
-	    View.inflate(this, R.layout.tutorial_screen_view, mainLayout);
-	    Button button = (Button) findViewById(R.id.next);
-	    button.setOnClickListener(new OnClickListener() {
-        	@Override
-            public void onClick(View v) {  
-        		ScrollView tutorialScreenView = (ScrollView) findViewById(R.id.tutorialScreen);
-            	FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
-            	mainLayout.removeView(tutorialScreenView);
-            	addFriendScreen();
-            }
-        });
-	}
-	
 	//Screen after tutorial to add friends when user's first join
 	private void addFriendScreen(){
 		FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
@@ -279,7 +271,9 @@ public class TrackerPrototype extends FragmentActivity
         });
 	}
 
-	//TODO add loading circle or bar
+	/**
+	 * Shows signinScreen
+	 */
 	private void signInScreen() {
 		FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
 	    View.inflate(this, R.layout.sign_in_screen_view, mainLayout);
@@ -322,7 +316,9 @@ public class TrackerPrototype extends FragmentActivity
 	    });
 	}
 	
-	//TODO put actual notifications inside
+	/**
+	 * Shows notifications screen
+	 */
 	private void notificationScreen(){
 		menuCheck = false;
 		FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
@@ -343,6 +339,10 @@ public class TrackerPrototype extends FragmentActivity
 	    connection.execute(userScreenName);
 	}
 	
+	
+    /**
+     * Inflate notifications into the notification screen
+     */
 	private void inflateNotifications(String notifications){
 		int i = 0;
 		boolean alflag = false, lflag = false, fflag = false; 
@@ -379,8 +379,8 @@ public class TrackerPrototype extends FragmentActivity
 				 });
 		    alflag = true;
 	    }
+		    
 		//location requests
-
 	    while (st.hasMoreTokens()) {
 	        screenName = st.nextToken();
 	        if(screenName.equals("friend")) break;
@@ -421,6 +421,7 @@ public class TrackerPrototype extends FragmentActivity
 		    });
 		    lflag = true;
 	    }
+	    
 	    //friend requests
 	    while (st.hasMoreTokens()) {
 	    	screenName = st.nextToken();
@@ -467,7 +468,11 @@ public class TrackerPrototype extends FragmentActivity
 	    Button exit = (Button) findViewById(R.id.exit);
 	    exit.setEnabled(true);
 	}
-		
+	
+	
+	/**
+	 * Show friend list screen
+	 */
 	private void friendListScreen(){
 		menuCheck = false;
 		FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
@@ -504,6 +509,9 @@ public class TrackerPrototype extends FragmentActivity
 		connection.execute(userScreenName);
 	}
 	
+	/**
+	 * Inflate friend List into the friend list screen
+	 */
 	private void inflateFriendList(String friends){
 		int i = 0;
 		boolean fflag = false;
@@ -560,6 +568,9 @@ public class TrackerPrototype extends FragmentActivity
 		exit.setEnabled(true);
 	}
 	
+	/**
+	 * Generate screen for directions
+	 */
 	private void directionsScreen(String screenname){
 		menuCheck = false;
 		FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
@@ -581,7 +592,9 @@ public class TrackerPrototype extends FragmentActivity
 	    inflateDirections(screenname);
 	}
 	
-	//TODO get directions from document
+	/**
+	 * Inflates directions into the directions screen based upon the route currently displayed
+	 */
 	private void inflateDirections(String screenname){
 		int i = 0;
 		TableLayout directionsTableLayout = (TableLayout) findViewById(R.id.directionsTable);
@@ -592,16 +605,15 @@ public class TrackerPrototype extends FragmentActivity
 		String tokenizedSteps = acceptedLocation.getString("instructions", "Failed to load/?/");
 		StringTokenizer st = new StringTokenizer(tokenizedSteps, "+");
 		
+		//Line by Line of instruction/distance pairs
 		while (st.hasMoreTokens()) {
 		    instruction = st.nextToken();
-		    Log.i("youknow",instruction);
 		    directionView = View.inflate(this, R.layout.direction, directionsTableLayout);
 		    instructionView = (TextView)directionView.findViewById(R.id.instruction);
 		    instructionView.setText(Html.fromHtml(instruction));
 		    instructionView.setId(Integer.MAX_VALUE - i++);
 		    
 		    distance = st.nextToken();
-		    Log.i("youknow",distance);
 		    distanceView = (TextView)directionView.findViewById(R.id.distance);
 		    distanceView.setText(distance);	
 		    distanceView.setId(Integer.MAX_VALUE - i++);
@@ -612,17 +624,23 @@ public class TrackerPrototype extends FragmentActivity
 	}
 	
 	
-	//TODO use as router, catch same location error
+	/**
+	 * Generate a route using the {@link GoogleDirection} class.
+	 * Save instructions and friends name to be used in directions screen	 
+	 */
 	public void getRoute(final String name, final double lat, final double lng){
 
         userLocation = locationClient.getLastLocation();
                 
         direction = new GoogleDirection(this);
+        //create response listener for when the direction API responds to request
         direction.setOnDirectionResponseListener(new OnDirectionResponseListener() {
 			public void onResponse(String status, Document doc, GoogleDirection gd) {
 				map.clear();
-				map.addPolyline(gd.getPolyline(doc, 3, Color.RED));				
-		        map.addMarker(new MarkerOptions().position(new LatLng(userLocation.getLatitude(),userLocation.getLongitude()))
+				map.addPolyline(gd.getPolyline(doc, 3, Color.RED));	
+				LatLng userLatLng = new LatLng(userLocation.getLatitude(),userLocation.getLongitude());
+				LatLng friendLatLng = new LatLng(lat,lng);
+		        map.addMarker(new MarkerOptions().position(userLatLng)
 		        	    .icon(BitmapDescriptorFactory.defaultMarker(
 		        	    BitmapDescriptorFactory.HUE_GREEN)));
         
@@ -630,8 +648,18 @@ public class TrackerPrototype extends FragmentActivity
 		        	    .icon(BitmapDescriptorFactory.defaultMarker(
 		        	    BitmapDescriptorFactory.HUE_GREEN)));
 		        
+		        //Zoom to route
+		        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+		        builder.include(userLatLng);
+		        builder.include(friendLatLng);
+		        map.animateCamera(CameraUpdateFactory.newLatLngBounds
+		        		(builder.build(), 
+		        		getApplicationContext().getResources().getDisplayMetrics().widthPixels, 
+		        		getApplicationContext().getResources().getDisplayMetrics().heightPixels, 
+		                100));
+		        
+		        //set key/value pair as instructions, and name
 		        Editor edit = acceptedLocation.edit();
-		        //set key/value pair as instructions, (polyline) not yet, and name
 		        edit.putString("instructions", direction.getStepInstruction(doc));
 		        edit.putString("name", name);
 		        edit.commit();
@@ -639,11 +667,12 @@ public class TrackerPrototype extends FragmentActivity
 			}
 		});
         
+        //request to google directions API
         direction.request(new LatLng(userLocation.getLatitude(),userLocation.getLongitude()),
         		new LatLng(lat,lng), GoogleDirection.MODE_DRIVING);
 	}
 	
-	//friends list, options, help screen, notifications
+	//TODO add options screen
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.activity_main, menu);
@@ -671,8 +700,10 @@ public class TrackerPrototype extends FragmentActivity
 	            notificationScreen();
 	            return true;
 	        case R.id.directions:
+	        	//show directions for the current route
 	        	if(routeDisplayed)
 	        		directionsScreen(acceptedLocation.getString("name", "?"));
+	        	//No route to get directions
 	        	else
 	        		Toast.makeText(getApplicationContext(), "No Route", Toast.LENGTH_SHORT).show();
 	            return true;	       
@@ -747,7 +778,7 @@ public class TrackerPrototype extends FragmentActivity
         	FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
         	mainLayout.removeView(registerScreenView);
         	
-        	tutorialScreen();
+        	addFriendScreen();
 		}
 	}
 	
@@ -788,7 +819,6 @@ public class TrackerPrototype extends FragmentActivity
 		protected void onPostExecute(Void Result){
 			switch (errorDecider){
 			case -1: 
-				//TODO (should not effect auto signin
 				if(!options.getBoolean("autoSignin", false)){
 					Toast.makeText(getApplicationContext(), "Server error", Toast.LENGTH_SHORT).show();
 					Button button = (Button) findViewById(R.id.submit);
@@ -800,7 +830,6 @@ public class TrackerPrototype extends FragmentActivity
 				}
 				return;
 			case -3: 
-				//TODO (should not effect auto signin
 				if(!options.getBoolean("autoSignin", false)){
 					Toast.makeText(getApplicationContext(), "Incorrect screen name or password", Toast.LENGTH_SHORT).show();
 					Button button = (Button) findViewById(R.id.submit);
@@ -1144,7 +1173,8 @@ public class TrackerPrototype extends FragmentActivity
 		protected void onPostExecute(Void Result){
 			switch (errorDecider){
 				case -1: 		
-					//TODO enable the exit button
+					Button exit = (Button) findViewById(R.id.exit);
+				    exit.setEnabled(true);
 					Toast.makeText(getApplicationContext(), "Server error", Toast.LENGTH_SHORT).show();//reseving friends list?
 				    return;
 				default:
@@ -1191,7 +1221,8 @@ public class TrackerPrototype extends FragmentActivity
 			
 			switch (errorDecider){
 			case -1: 	
-				//TODO enable the exit button
+				Button exit = (Button) findViewById(R.id.exit);
+			    exit.setEnabled(true);
 				Toast.makeText(getApplicationContext(), "Server error", Toast.LENGTH_SHORT).show();//receiving notifications?
 			    return;
 			default:
@@ -1250,7 +1281,7 @@ public class TrackerPrototype extends FragmentActivity
 				    return;
 				default:
 					break;
-			}			//TODO generate route/direction to recieved location of requestee
+			}			
 			ScrollView notificationScreenView = (ScrollView) findViewById(R.id.notificationScreen);
     		FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
     		mainLayout.removeView(notificationScreenView);
@@ -1294,15 +1325,18 @@ public class TrackerPrototype extends FragmentActivity
 	@Override
 	public void onConnected(Bundle connectionHint) {
 		// Display the connection status
-        Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show();
+		userLocation = locationClient.getLastLocation();
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom
+        		(new LatLng(userLocation.getLatitude(),userLocation.getLongitude()), 16));
 		
 	}
 
 	@Override
 	public void onDisconnected() {
 		// Display the connection status
-        Toast.makeText(this, "Disconnected. Please re-connect.",
-                Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, "Disconnected. Please re-connect.",
+        //       Toast.LENGTH_SHORT).show();
 		
 	}
 	
