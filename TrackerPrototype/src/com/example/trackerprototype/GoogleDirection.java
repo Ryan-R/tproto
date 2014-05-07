@@ -259,7 +259,13 @@ public class GoogleDirection {
    			
    			tokenizedSteps += (instruction + "+" + distanceText + "+");
    		}
-   		tokenizedSteps = tokenizedSteps.substring(0, tokenizedSteps.length()-1);
+   		
+   		if (!tokenizedSteps.equals("")) {
+   			tokenizedSteps = tokenizedSteps.substring(0, tokenizedSteps.length()-1);
+   		}
+   		else{
+   			tokenizedSteps = "No available directions+ ";
+   		}
    		return tokenizedSteps;
    	}
  

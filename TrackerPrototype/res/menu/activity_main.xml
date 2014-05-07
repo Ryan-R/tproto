@@ -12,15 +12,10 @@
         android:title="Notifications"/>
     
     <item
-        android:id="@+id/test"
+        android:id="@+id/directions"
         android:orderInCategory="100"
         android:showAsAction="never"
-        android:title="test"/>
+        android:title="Directions"/>
     
-    <item
-        android:id="@+id/test2"
-        android:orderInCategory="100"
-        android:showAsAction="never"
-        android:title="test2"/>
 
 </menu>

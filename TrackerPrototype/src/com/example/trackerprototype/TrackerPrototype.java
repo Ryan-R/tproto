@@ -60,10 +60,10 @@ public class TrackerPrototype extends FragmentActivity
 	//Better way of doing this
 	//http://stackoverflow.com/questions/1925486/android-storing-username-and-password
 	private SharedPreferences account;  //holds login information
-	private String userScreenName = "";
-	private SharedPreferences friends;  //holds friend information
+	private String userScreenName = ""; //Current user's screenname
 	private SharedPreferences acceptedLocation; //holds accepted location information
 	private boolean menuCheck = true; //if menu is allowed
+	private boolean routeDisplayed = false;
 	private GoogleMap map;
 	private GoogleDirection direction;
 	private LocationClient locationClient;
@@ -620,6 +620,7 @@ public class TrackerPrototype extends FragmentActivity
         direction = new GoogleDirection(this);
         direction.setOnDirectionResponseListener(new OnDirectionResponseListener() {
 			public void onResponse(String status, Document doc, GoogleDirection gd) {
+				map.clear();
 				map.addPolyline(gd.getPolyline(doc, 3, Color.RED));				
 		        map.addMarker(new MarkerOptions().position(new LatLng(userLocation.getLatitude(),userLocation.getLongitude()))
 		        	    .icon(BitmapDescriptorFactory.defaultMarker(
@@ -634,7 +635,7 @@ public class TrackerPrototype extends FragmentActivity
 		        edit.putString("instructions", direction.getStepInstruction(doc));
 		        edit.putString("name", name);
 		        edit.commit();
-		       
+		        routeDisplayed = true;
 			}
 		});
         
@@ -669,12 +670,12 @@ public class TrackerPrototype extends FragmentActivity
 	        case R.id.notifications:
 	            notificationScreen();
 	            return true;
-	        case R.id.test:
-	            directionsScreen(acceptedLocation.getString("name", "?"));
-	            return true;
-	        case R.id.test2:
-	            getRoute("test", 38.7559029, -93.7375428);
-	            return true;
+	        case R.id.directions:
+	        	if(routeDisplayed)
+	        		directionsScreen(acceptedLocation.getString("name", "?"));
+	        	else
+	        		Toast.makeText(getApplicationContext(), "No Route", Toast.LENGTH_SHORT).show();
+	            return true;	       
 	        default:
 	            return super.onOptionsItemSelected(item);
 	    }

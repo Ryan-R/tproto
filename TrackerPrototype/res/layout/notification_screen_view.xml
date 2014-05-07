@@ -33,6 +33,7 @@
 	    android:paddingBottom="5dp"
 	    android:text="Accepted Location Requests"
 	    android:textAlignment="center"
+	    android:layout_centerHorizontal="true"
 	    android:textColor="#FFFFFF"
 	    android:textSize="25sp" />
 
