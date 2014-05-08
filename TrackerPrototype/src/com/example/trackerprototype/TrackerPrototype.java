@@ -34,6 +34,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -83,6 +84,8 @@ public class TrackerPrototype extends FragmentActivity
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
+		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+		
 		//Set map from API
 		if((map = ((SupportMapFragment) getSupportFragmentManager().
 				findFragmentById(R.id.mapview)).getMap()) == null)
@@ -637,16 +640,16 @@ public class TrackerPrototype extends FragmentActivity
         direction.setOnDirectionResponseListener(new OnDirectionResponseListener() {
 			public void onResponse(String status, Document doc, GoogleDirection gd) {
 				map.clear();
-				map.addPolyline(gd.getPolyline(doc, 3, Color.RED));	
+				map.addPolyline(gd.getPolyline(doc, 3, Color.GREEN));	
 				LatLng userLatLng = new LatLng(userLocation.getLatitude(),userLocation.getLongitude());
 				LatLng friendLatLng = new LatLng(lat,lng);
 		        map.addMarker(new MarkerOptions().position(userLatLng)
 		        	    .icon(BitmapDescriptorFactory.defaultMarker(
-		        	    BitmapDescriptorFactory.HUE_GREEN)));
+		        	    BitmapDescriptorFactory.HUE_CYAN)));
         
 		        map.addMarker(new MarkerOptions().position(new LatLng(lat,lng))
 		        	    .icon(BitmapDescriptorFactory.defaultMarker(
-		        	    BitmapDescriptorFactory.HUE_GREEN)));
+		        	    BitmapDescriptorFactory.HUE_CYAN)));
 		        
 		        //Zoom to route
 		        LatLngBounds.Builder builder = new LatLngBounds.Builder();
