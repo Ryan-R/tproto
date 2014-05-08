@@ -1,4 +1,4 @@
-package com.example.trackerprototype;
+package com.rnr.mapme;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;

@@ -4,7 +4,7 @@
  * UCM's CS4910-Software Engineering
  * by: Nicholas Lockhart NSL24980, Russell Michal RKM87480, Ryan Rickard RLR19630
  */
-package com.example.trackerprototype;
+package com.rnr.mapme;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -45,7 +45,7 @@ import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.trackerprototype.GoogleDirection.OnDirectionResponseListener;
+import com.example.trackerprototype.R;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
 import com.google.android.gms.location.LocationClient;
@@ -56,11 +56,12 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.rnr.mapme.GoogleDirection.OnDirectionResponseListener;
 
 /* Main activity that allows fragments(for the GoogleMap API v2 map)
  * Implements google play services in order to create a connection
  */
-public class TrackerPrototype extends FragmentActivity
+public class MapMe extends FragmentActivity
     implements GooglePlayServicesClient.ConnectionCallbacks,
         GooglePlayServicesClient.OnConnectionFailedListener
 {

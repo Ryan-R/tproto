@@ -2,7 +2,7 @@
  * Created by akexorcist on GitHub akexorcist@gmail.com 
  */
 
-package com.example.trackerprototype;
+package com.rnr.mapme;
 
 import java.io.IOException;
 import java.io.InputStream;
