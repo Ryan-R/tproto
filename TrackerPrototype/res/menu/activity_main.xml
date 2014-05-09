@@ -17,5 +17,11 @@
         android:showAsAction="never"
         android:title="Directions"/>
     
+    <item
+        android:id="@+id/signout"
+        android:orderInCategory="100"
+        android:showAsAction="never"
+        android:title="Sign Out"/>
+    
 
 </menu>

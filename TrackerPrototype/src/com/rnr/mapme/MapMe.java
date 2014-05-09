@@ -1,4 +1,5 @@
 //TODO Heart Beat to Server
+//TODO onresume
 /*
  * This is the Main Activity of the application designed for 
  * UCM's CS4910-Software Engineering
@@ -16,8 +17,10 @@ import org.w3c.dom.Document;
 
 import android.app.AlertDialog;
 import android.app.Application;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -85,7 +88,8 @@ public class MapMe extends FragmentActivity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-		
+		NotificationManager nManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		nManager.cancel(19630);
 		//Set map from API
 		if((map = ((SupportMapFragment) getSupportFragmentManager().
 				findFragmentById(R.id.mapview)).getMap()) == null)
@@ -100,33 +104,28 @@ public class MapMe extends FragmentActivity
 			map.setMyLocationEnabled(true);			
 		}
 		
-		if(!userScreenName.equals("")){
-			return;
-		}
+		locationClient = new LocationClient(this, this, this); //last to params
 		
 		options = getSharedPreferences("options", MODE_PRIVATE);
 		account = getSharedPreferences("account", MODE_PRIVATE);
 		acceptedLocation = getSharedPreferences("location", MODE_PRIVATE);
+		userScreenName = account.getString("screenName", "");
+		
+		if(!userScreenName.equals("")){
+			stopService(new Intent(getApplicationContext(), NotificationService.class));
+			startService(new Intent(getApplicationContext(), NotificationService.class));
+			return;
+		}
+		
 		//if it not the users first time
 		if(!options.getBoolean("firstTime", true)){
-			//if the user chooses to use the autoSignin feature
-			if(options.getBoolean("autoSignin", false)){
-				String screenName = account.getString("screenName", "");
-				String password = account.getString("password", "");
-				SignIn connection = new SignIn();
-        		connection.execute(screenName, password);
-			}
-			//if the user chooses to not use the autoSignin feature
-			else{
-				signInScreen();
-			}
+			signInScreen();
 		}
+		
 		//Users first time
 		else{
 			registerScreen();			
-		}
-		locationClient = new LocationClient(this, this, this); //last to params
-		
+		}		
 	}
 	
 	@Override
@@ -142,6 +141,11 @@ public class MapMe extends FragmentActivity
         locationClient.disconnect();
         super.onStop();
     }
+	
+	@Override
+	protected void onDestroy(){
+		super.onDestroy();
+	}
 
 	/**
 	 * Show register screen
@@ -675,6 +679,16 @@ public class MapMe extends FragmentActivity
         		new LatLng(lat,lng), GoogleDirection.MODE_DRIVING);
 	}
 	
+	//sign out the user and stop the service
+	public void signOut(){
+		account.edit().clear()
+					.commit();
+		stopService(new Intent(getApplicationContext(), NotificationService.class));
+		NotificationManager nManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		nManager.cancel(19630);
+		finish();
+	}
+	
 	//TODO add options screen
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -709,7 +723,10 @@ public class MapMe extends FragmentActivity
 	        	//No route to get directions
 	        	else
 	        		Toast.makeText(getApplicationContext(), "No Route", Toast.LENGTH_SHORT).show();
-	            return true;	       
+	            return true;
+	        case R.id.signout:
+	            signOut();
+	            return true;	         
 	        default:
 	            return super.onOptionsItemSelected(item);
 	    }
@@ -772,6 +789,9 @@ public class MapMe extends FragmentActivity
 			default:
 				break;
 		}
+			SharedPreferences.Editor accountEditor = account.edit();
+			accountEditor.putString("screenName", screenName);
+			accountEditor.commit();
 			userScreenName = screenName;
 			SharedPreferences.Editor optionsEditor = options.edit();
     		optionsEditor.putBoolean("firstTime", false);
@@ -780,6 +800,8 @@ public class MapMe extends FragmentActivity
     		ScrollView registerScreenView = (ScrollView) findViewById(R.id.registerScreen);
         	FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
         	mainLayout.removeView(registerScreenView);
+        	
+        	startService(new Intent(getApplicationContext(), NotificationService.class));
         	
         	addFriendScreen();
 		}
@@ -820,50 +842,34 @@ public class MapMe extends FragmentActivity
 		
 		@Override
 		protected void onPostExecute(Void Result){
+			Button button = (Button) findViewById(R.id.submit);
 			switch (errorDecider){
 			case -1: 
-				if(!options.getBoolean("autoSignin", false)){
-					Toast.makeText(getApplicationContext(), "Server error", Toast.LENGTH_SHORT).show();
-					Button button = (Button) findViewById(R.id.submit);
-					button.setEnabled(true);
-				}
-				else{
-					Toast.makeText(getApplicationContext(), "Server error", Toast.LENGTH_SHORT).show();
-					signInScreen();
-				}
+				Toast.makeText(getApplicationContext(), "Server error", Toast.LENGTH_SHORT).show();
+				button.setEnabled(true);
 				return;
 			case -3: 
-				if(!options.getBoolean("autoSignin", false)){
-					Toast.makeText(getApplicationContext(), "Incorrect screen name or password", Toast.LENGTH_SHORT).show();
-					Button button = (Button) findViewById(R.id.submit);
-					button.setEnabled(true);
-				}
-				else{
-					Toast.makeText(getApplicationContext(), "Error in signing in", Toast.LENGTH_SHORT).show();
-					signInScreen();
-				}
+				Toast.makeText(getApplicationContext(), "Incorrect screen name or password", Toast.LENGTH_SHORT).show();
+				button.setEnabled(true);
 				return;
 			default:
 				break;
 		}
-			
+			SharedPreferences.Editor accountEditor = account.edit();
+			accountEditor.putString("screenName", screenName);
+			accountEditor.commit();	
 			userScreenName = screenName;			
-			if(!options.getBoolean("autoSignin", false)){
-				SharedPreferences.Editor optionsEditor = options.edit();
-				if(((CheckBox)findViewById(R.id.checkBox1)).isChecked()){					
-					optionsEditor.putBoolean("autoSignin", true);					
-					SharedPreferences.Editor accountEditor = account.edit();
-					accountEditor.putString("screenName", screenName);
-					accountEditor.putString("password", password);    
-					accountEditor.commit();					
-    			}
-				optionsEditor.putBoolean("firstTime", false);
-	    		optionsEditor.commit();
+			
+			SharedPreferences.Editor optionsEditor = options.edit();
+			optionsEditor.putBoolean("firstTime", false);
+	    	optionsEditor.commit();
 				
-				ScrollView signInScreenView = (ScrollView) findViewById(R.id.signInScreen);
-	        	FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
-	        	mainLayout.removeView(signInScreenView);
-			}			
+			ScrollView signInScreenView = (ScrollView) findViewById(R.id.signInScreen);
+	        FrameLayout mainLayout = (FrameLayout) findViewById(R.id.mainLayout);
+	        mainLayout.removeView(signInScreenView);
+	        	
+	        startService(new Intent(getApplicationContext(), NotificationService.class));
+						
 		}
 	}
 
